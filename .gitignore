@@ -1,0 +1,8 @@
+# —— 以下为需要上传到 GitHub 的源码 ——
+node_modules/
+.DS_Store
+Thumbs.db
+*.log
+# 编辑器临时文件
+.vscode/
+.idea/

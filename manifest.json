@@ -1,0 +1,43 @@
+{
+  "name": "秒薪 · 实时工资计算器",
+  "short_name": "秒薪",
+  "description": "每分钟每秒都在涨的工资计数器 · 牛马语录 · 全年出勤日历",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
+  "orientation": "portrait-primary",
+  "background_color": "#080b12",
+  "theme_color": "#080b12",
+  "lang": "zh-CN",
+  "dir": "ltr",
+  "categories": ["finance", "productivity", "utilities"],
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "./icon-maskable.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "今日已赚",
+      "short_name": "今日",
+      "description": "查看今天赚了多少钱",
+      "url": "./index.html"
+    },
+    {
+      "name": "全年总览",
+      "short_name": "全年",
+      "description": "查看 12 个月工资与日薪",
+      "url": "./index.html#year"
+    }
+  ]
+}

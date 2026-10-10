@@ -1,0 +1,74 @@
+<!-- 首次使用引导（强制填写，导入真实设置） -->
+<div class="sheet show" id="welcomeSheet" data-nodismiss>
+  <div class="panel">
+    <div class="ph">
+      <h3>先填一下你的工资 👋</h3>
+      <button class="x" id="btnWelcomeSkip" title="跳过，用默认设置">跳过</button>
+    </div>
+    <div style="font-size:10.5px;color:var(--txt3);margin:-8px 0 14px">
+      填完点下面按钮，或者直接点右上角 <b style="color:var(--acc)">✕ 跳过</b>（用默认设置，之后随时可改）
+    </div>
+    <p style="font-size:13px;color:var(--txt2);line-height:1.85;margin-bottom:16px">
+      已经帮你填好一套<b style="color:var(--acc)">通用默认值</b>，<b style="color:var(--acc)">直接点下面按钮就能开始</b>。<br>
+      想改成自己的？随便改，每一项都会立刻生效。<br>
+      <span style="font-size:11.5px;color:var(--txt3)">所有数据只存在你手机/电脑里，不上传服务器。</span>
+    </p>
+    <div class="field"><label>月薪（税前，单位元）</label>
+      <input id="wSalary" type="number" value="8000" placeholder="例如 8000" inputmode="decimal" autocomplete="off">
+    </div>
+    <div class="field"><label>上班时间</label>
+      <input id="wStart" type="time" value="09:00">
+      <div class="time-quick" data-for="wStart">
+        <button data-t="08:30">8:30</button><button data-t="09:00">9:00</button>
+        <button data-t="09:30">9:30</button><button data-t="10:00">10:00</button>
+      </div>
+    </div>
+    <div class="field"><label>下班时间</label>
+      <input id="wEnd" type="time" value="18:00">
+      <div class="time-quick" data-for="wEnd">
+        <button data-t="17:30">17:30</button><button data-t="18:00">18:00</button>
+        <button data-t="19:00">19:00</button><button data-t="20:00">20:00</button>
+      </div>
+    </div>
+    <div class="field"><label>午休开始</label>
+      <input id="wLunch1" type="time" value="12:00">
+      <div class="time-quick" data-for="wLunch1">
+        <button data-t="11:30">11:30</button><button data-t="12:00">12:00</button>
+        <button data-t="12:30">12:30</button><button data-t="13:00">13:00</button>
+      </div>
+    </div>
+    <div class="field"><label>午休结束</label>
+      <input id="wLunch2" type="time" value="13:00">
+      <div class="time-quick" data-for="wLunch2">
+        <button data-t="13:00">13:00</button><button data-t="13:30">13:30</button>
+        <button data-t="14:00">14:00<i style="font-style:normal;opacity:.7">（2h）</i></button>
+        <button data-t="14:30">14:30<i style="font-style:normal;opacity:.7">（2.5h）</i></button>
+      </div>
+      <div class="hint-s" id="lunchTip">午休 <b style="color:var(--acc)">1 小时</b> · <b style="color:var(--ok)">不计入工资</b>。可以改成两小时或更久，下面的「每天工时」会按你填的算。</div>
+    </div>
+    <div class="field">
+      <label>每天净工时<span style="color:var(--acc);font-size:10px;margin-left:4px">自动算</span></label>
+      <input id="wHours" type="text" inputmode="decimal" readonly
+             style="background:var(--surface2);cursor:default;font-family:var(--f-num);font-weight:700;color:var(--acc)">
+      <div class="hint-s" id="hoursTip">＝ 下班 − 上班 − 午休，自动算出来。<br>
+        如果你的制度特殊（比如 6 小时工作制），可以在设置里改。</div>
+    </div>
+    <div class="field"><label>休息日制度</label>
+      <div class="seg" id="wWork">
+        <button data-v="double">正常双休</button>
+        <button data-v="alt">大小周</button>
+        <button data-v="single">单休</button>
+      </div>
+      <div class="hint-s">已默认选「正常双休」，如果不是双休可以改</div>
+    </div>
+    <div class="field"><label>每月发薪日（几号）</label><input id="wPayDay" type="number" min="1" max="31" placeholder="15" inputmode="numeric"></div>
+
+    <button class="save" id="btnWelcomeSave" style="margin-top:8px">开 始 算 钱</button>
+    <div class="welcome-skip-row">
+      <button id="btnWelcomeSkip2">懒得填？直接用默认设置开始 →</button>
+    </div>
+    <div class="note" style="margin-top:6px;font-size:10.5px">
+      所有内容只存在本机，之后可以在设置里随时改。
+    </div>
+  </div>
+</div>

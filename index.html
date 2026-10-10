@@ -1,0 +1,3721 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="aurora" style="color-scheme:dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0a0e17">
+<title>秒薪 · 实时工资计算器</title>
+
+<!-- PWA：可安装为 App -->
+<link rel="manifest" href="./manifest.json">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="秒薪">
+<link rel="apple-touch-icon" href="./icon.svg">
+<link rel="icon" type="image/svg+xml" href="./icon.svg">
+<link rel="mask-icon" href="./icon.svg" color="#38bdf8">
+<style>
+/* ============================================================
+   皮肤系统 v4
+   ============================================================ */
+:root{
+  --r-lg:22px; --r-md:14px; --r-sm:9px;
+  --f-num:ui-monospace,"SF Mono","JetBrains Mono","Cascadia Mono",Consolas,monospace;
+  --f-ui:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  --ease:cubic-bezier(.22,1,.36,1);
+  --radius:16px;
+  --body-pattern:none;
+}
+/* —— ① 极光科技（经典，保留） —— */
+[data-theme="aurora"]{
+  --bg:#080b12; --glow1:rgba(56,189,248,.20); --glow2:rgba(139,92,246,.20); --glow3:rgba(34,197,94,.14);
+  --surface:rgba(255,255,255,.045); --surface2:rgba(255,255,255,.075); --stroke:rgba(255,255,255,.10);
+  --txt:#eef3fa; --txt2:#93a3bd; --txt3:#5b6b85;
+  --acc:#38bdf8; --acc2:#8b5cf6; --ok:#22c55e; --warn:#fbbf24; --bad:#fb7185;
+  --num-grad:linear-gradient(135deg,#ffffff 10%,#7dd3fc 55%,#c4b5fd 100%);
+  --btn:rgba(255,255,255,.06); --btn-h:rgba(255,255,255,.12);
+  --shadow:0 20px 60px -25px rgba(0,0,0,.95);
+  --glow-line:rgba(56,189,248,.55);
+  --radius:22px; --skin:aurora;
+}
+
+/* ========== ① 键盘科技风 ========== */
+/* 深空底 + 青色荧光，卡片做成键盘键帽质感 */
+[data-theme="keyboard"]{
+  --bg:#050a0f;
+  --glow1:rgba(0,229,255,.16); --glow2:rgba(0,255,136,.10); --glow3:rgba(64,255,182,.07);
+  --surface:#0b1319; --surface2:#101c24; --stroke:rgba(0,229,255,.22);
+  --txt:#d7f5ff; --txt2:#6ea3b5; --txt3:#3d6675;
+  --acc:#00e5ff; --acc2:#00ff88; --ok:#00ff88; --warn:#ffb02e; --bad:#ff4d6d;
+  --num-grad:linear-gradient(135deg,#e8fdff 0%,#00e5ff 45%,#00ff88 100%);
+  --btn:#0f1c24; --btn-h:#16303a;
+  --shadow:0 24px 60px -26px rgba(0,229,255,.35);
+  --glow-line:rgba(0,229,255,.6);
+  --radius:12px; --skin:keyboard;
+  --body-pattern:repeating-linear-gradient(0deg,rgba(0,229,255,.05) 0 1px,transparent 1px 3px);
+}
+/* 键帽质感：顶部高光 + 底部厚阴影 */
+[data-theme="keyboard"] .card,
+[data-theme="keyboard"] .rate,
+[data-theme="keyboard"] .tlc{
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.14),
+    inset 0 -2px 0 rgba(0,0,0,.55),
+    0 6px 18px -10px rgba(0,0,0,.8);
+}
+[data-theme="keyboard"] .cell{
+  background:#0b1319;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.10), inset 0 -2px 0 rgba(0,0,0,.5);
+}
+[data-theme="keyboard"] .btn{
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.12), inset 0 -2px 0 rgba(0,0,0,.5);
+}
+[data-theme="keyboard"] .btn:active{
+  box-shadow:inset 0 2px 6px rgba(0,0,0,.7); transform:translateY(1px);
+}
+[data-theme="keyboard"] .fill{box-shadow:0 0 12px currentColor, inset 0 0 6px rgba(255,255,255,.4)}
+[data-theme="keyboard"] .track{box-shadow:inset 0 2px 6px rgba(0,0,0,.7)}
+[data-theme="keyboard"] .money{text-shadow:0 0 30px rgba(0,229,255,.45)}
+[data-theme="keyboard"] .cell .v{text-shadow:0 0 12px currentColor}
+[data-theme="keyboard"] .hero::before{
+  content:"";position:absolute;top:0;left:12%;right:12%;height:2px;border-radius:99px;
+  background:linear-gradient(90deg,transparent,#00e5ff,#00ff88,#00e5ff,transparent);
+  box-shadow:0 0 14px #00e5ff,0 0 28px rgba(0,229,255,.6);
+  animation:kbScan 3.6s var(--ease) infinite;
+}
+@keyframes kbScan{0%,100%{opacity:.55}50%{opacity:1}}
+
+/* ========== ② 宇宙星球风 ========== */
+[data-theme="cosmos"]{
+  --bg:#05060f;
+  --glow1:rgba(120,80,220,.24); --glow2:rgba(60,140,255,.20); --glow3:rgba(255,140,200,.12);
+  --surface:#0c0f1e; --surface2:#141930; --stroke:rgba(160,180,255,.20);
+  --txt:#eaefff; --txt2:#9aa3d0; --txt3:#5d6699;
+  --acc:#a78bfa; --acc2:#60a5fa; --ok:#4ade80; --warn:#fbbf24; --bad:#fb7185;
+  --num-grad:linear-gradient(135deg,#ffffff 0%,#c4b5fd 40%,#60a5fa 100%);
+  --btn:#141930; --btn-h:#1e2545;
+  --shadow:0 26px 64px -28px rgba(90,80,200,.55);
+  --glow-line:rgba(167,139,250,.65);
+  --radius:24px; --skin:cosmos;
+}
+[data-theme="cosmos"] .card{
+  background:
+    radial-gradient(circle at 28% 12%, rgba(255,255,255,.10), transparent 42%),
+    radial-gradient(circle at 76% 88%, rgba(120,100,255,.14), transparent 48%),
+    var(--surface);
+}
+[data-theme="cosmos"] .cell{
+  background:radial-gradient(circle at 34% 20%, rgba(255,255,255,.07), transparent 55%), var(--bg);
+}
+[data-theme="cosmos"] .money{text-shadow:0 0 40px rgba(167,139,250,.55)}
+[data-theme="cosmos"] .card::after{
+  content:"";position:absolute;top:-40%;right:-30%;width:180px;height:180px;border-radius:50%;
+  border:1px solid rgba(167,139,250,.22);pointer-events:none;
+}
+[data-theme="cosmos"] .hero::before{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:
+    radial-gradient(1.4px 1.4px at 18% 22%,#fff,transparent),
+    radial-gradient(1.2px 1.2px at 72% 18%,#fff,transparent),
+    radial-gradient(1px 1px at 84% 62%,rgba(255,255,255,.85),transparent),
+    radial-gradient(1.6px 1.6px at 34% 74%,#fff,transparent),
+    radial-gradient(1px 1px at 56% 88%,rgba(255,255,255,.7),transparent),
+    radial-gradient(1.2px 1.2px at 92% 88%,#fff,transparent),
+    radial-gradient(1px 1px at 8% 62%,rgba(255,255,255,.7),transparent);
+  animation:twinkle 4s ease-in-out infinite alternate;
+}
+@keyframes twinkle{from{opacity:.5}to{opacity:1}}
+[data-theme="cosmos"] .fill{
+  background:linear-gradient(90deg,#a78bfa,#60a5fa,#4ade80);
+  box-shadow:0 0 16px rgba(167,139,250,.8);
+}
+[data-theme="cosmos"] .track{background:#050813;box-shadow:inset 0 0 10px rgba(0,0,0,.9)}
+
+/* ========== ③ 呆猫八条风（暖橙粉） ========== */
+[data-theme="cat8"]{
+  --bg:#fff6ec;
+  --glow1:rgba(255,170,90,.30); --glow2:rgba(255,140,180,.26); --glow3:rgba(255,220,150,.30);
+  --surface:rgba(255,255,255,.86); --surface2:#fff; --stroke:rgba(230,150,80,.24);
+  --txt:#6b4423; --txt2:#a8765a; --txt3:#c9a288;
+  --acc:#ff9f43; --acc2:#ff6b9d; --ok:#52b788; --warn:#ffb703; --bad:#ef476f;
+  --num-grad:linear-gradient(135deg,#e8590c 0%,#ff9f43 45%,#ff6b9d 100%);
+  --btn:#fff; --btn-h:#fff4e8;
+  --shadow:0 18px 40px -18px rgba(230,140,60,.40);
+  --glow-line:rgba(255,159,67,.5);
+  --radius:26px; --skin:cat8;
+}
+[data-theme="cat8"] .card{
+  background:rgba(255,255,255,.90); border:2px solid rgba(230,150,80,.18);
+  box-shadow:0 14px 34px -16px rgba(230,140,60,.42);
+}
+[data-theme="cat8"] .btn{border:2px solid rgba(230,150,80,.22);border-radius:999px}
+[data-theme="cat8"] .cell{background:#fffdfb}
+[data-theme="cat8"] .fill{position:relative}
+[data-theme="cat8"] .fill::after{
+  content:"";position:absolute;right:-5px;top:50%;transform:translateY(-50%);
+  width:13px;height:13px;border-radius:50%;
+  background:var(--acc);box-shadow:0 0 0 2px #fff,0 2px 6px rgba(0,0,0,.2);
+}
+[data-theme="cat8"] .tlc{background:#fffaf3;border:2px solid rgba(230,150,80,.16)}
+[data-theme="cat8"] .fill{background:linear-gradient(90deg,#ffd8a8,var(--acc))}
+
+/* —— ④ 极客终端（保留） —— */
+[data-theme="matrix"]{
+  --bg:#020604; --glow1:rgba(0,255,156,.13); --glow2:rgba(0,200,120,.10); --glow3:rgba(0,255,156,.06);
+  --surface:rgba(0,255,156,.035); --surface2:rgba(0,255,156,.08); --stroke:rgba(0,255,156,.22);
+  --txt:#c8ffd8; --txt2:#5fe89a; --txt3:#2f8f5b;
+  --acc:#00ff9c; --acc2:#00cc7a; --ok:#00ff9c; --warn:#ffd166; --bad:#ff5c5c;
+  --num-grad:linear-gradient(135deg,#e6fff2 0%,#00ff9c 60%,#00b26b 100%);
+  --btn:rgba(0,255,156,.07); --btn-h:rgba(0,255,156,.15);
+  --shadow:0 0 50px -12px rgba(0,255,156,.28);
+  --glow-line:rgba(0,255,156,.6);
+  --radius:8px; --skin:matrix;
+  --body-pattern:repeating-linear-gradient(0deg,rgba(0,255,156,.05) 0 1px,transparent 1px 3px);
+}
+[data-theme="matrix"] .card{border-radius:8px}
+
+/* —— 宇宙皮肤专用：进度条变成「行星追恒星」轨道 —— */
+/* 用 .track 容器做一条水平轨道，填充段=行星已走过的路，末端放恒星 */
+[data-theme="cosmos"] .bar{margin-top:20px}
+[data-theme="cosmos"] .bhead .n b{color:var(--acc)}
+[data-theme="cosmos"] .track{
+  height:20px;border-radius:99px;background:#04030c;
+  border:1px solid rgba(160,180,255,.16);
+  box-shadow:inset 0 2px 12px rgba(0,0,0,.95), 0 0 24px -10px rgba(120,100,255,.5);
+  overflow:visible;position:relative
+}
+/* 轨道底纹：虚线轨迹 */
+[data-theme="cosmos"] .track::before{
+  content:"";position:absolute;left:8px;right:8px;top:50%;height:2px;margin-top:-1px;
+  background:repeating-linear-gradient(90deg,rgba(160,180,255,.35) 0 6px,transparent 6px 12px);
+  border-radius:2px
+}
+/* 走过的轨道 = 能量尾迹 */
+[data-theme="cosmos"] .track .fill{
+  top:2px !important;bottom:2px !important;height:auto !important;
+  border-radius:99px !important;
+}
+[data-theme="cosmos"] .track .fill::after{ content:none !important; }
+/* 行星本体（填充段的右端） */
+[data-theme="cosmos"] .track .fill::before{
+  content:"" !important;position:absolute !important;right:-7px !important;top:50% !important;
+  width:14px !important;height:14px !important;margin-top:-7px !important;border-radius:50%;
+  background:radial-gradient(circle at 32% 30%, #fff 8%, var(--acc) 42%, var(--acc2) 100%);
+  box-shadow:0 0 10px var(--acc),0 0 22px color-mix(in srgb,var(--acc) 70%,transparent),0 0 40px color-mix(in srgb,var(--acc2) 50%,transparent);
+  animation:none !important;
+}
+/* 恒星：轨道右端的固定终点 */
+[data-theme="cosmos"] .track::after{
+  content:"";position:absolute;right:-5px;top:50%;width:18px;height:18px;margin-top:-9px;
+  border-radius:50%;
+  background:radial-gradient(circle at 38% 32%, #fffef5 10%, #ffd66b 34%, #ff9f1c 70%, #ff6b00 100%);
+  box-shadow:0 0 12px #ffd66b,0 0 28px rgba(255,159,28,.75),0 0 54px rgba(255,107,0,.45);
+  animation:starPulse 3.2s var(--ease) infinite
+}
+@keyframes starPulse{0%,100%{transform:scale(1);filter:brightness(1)}50%{transform:scale(1.14);filter:brightness(1.35)}}
+/* 轨道标签 */
+[data-theme="cosmos"] .bar .bhead::after{
+  content:"行 星 → 恒 星";margin-left:auto;font-size:9px;color:#5d6699;
+  letter-spacing:1px;opacity:.7;flex:none;margin-left:10px
+}
+[data-theme="cosmos"] .segbar .sb-track.seg{
+  height:18px;border-radius:99px;background:#04030c;border-color:rgba(160,180,255,.16)
+}
+[data-theme="cosmos"] .segbar .sb-track.seg::after{
+  content:"";position:absolute;right:-4px;top:50%;width:12px;height:12px;margin-top:-6px;
+  border-radius:50%;background:radial-gradient(circle at 38% 32%,#fffef5 10%,#ffd66b 34%,#ff9f1c 70%,#ff6b00 100%);
+  box-shadow:0 0 8px #ffd66b,0 0 18px rgba(255,159,28,.6)
+}
+
+/* —— ⑥ 樱花可爱（兼容旧配置，v3 用户可能存着这个主题） —— */
+[data-theme="sakura"]{
+  --bg:#fff5f7; --glow1:rgba(244,114,182,.28); --glow2:rgba(165,214,255,.34); --glow3:rgba(253,224,171,.30);
+  --surface:rgba(255,255,255,.78); --surface2:rgba(255,255,255,.95); --stroke:rgba(244,114,182,.20);
+  --txt:#5b3245; --txt2:#a1728a; --txt3:#c9a5b5;
+  --acc:#f472b6; --acc2:#fbbf24; --ok:#34d399; --warn:#fb923c; --bad:#f87171;
+  --num-grad:linear-gradient(135deg,#db2777 0%,#f472b6 50%,#fbbf24 100%);
+  --btn:rgba(255,255,255,.9); --btn-h:#fff;
+  --shadow:0 18px 40px -18px rgba(219,39,119,.30);
+  --glow-line:rgba(244,114,182,.45);
+  --radius:26px; --skin:sakura;
+  --body-pattern:none;
+}
+
+/* —— ⑤ 日落暖橙（保留） —— */
+[data-theme="sunset"]{
+  --bg:#170f1c; --glow1:rgba(251,146,60,.24); --glow2:rgba(217,70,239,.22); --glow3:rgba(244,114,182,.16);
+  --surface:rgba(255,255,255,.055); --surface2:rgba(255,255,255,.09); --stroke:rgba(255,255,255,.12);
+  --txt:#fdf4ec; --txt2:#c4a99a; --txt3:#8b7266;
+  --acc:#fb923c; --acc2:#e879f9; --ok:#4ade80; --warn:#fbbf24; --bad:#f87171;
+  --num-grad:linear-gradient(135deg,#fff7ed 5%,#fb923c 55%,#e879f9 100%);
+  --btn:rgba(255,255,255,.07); --btn-h:rgba(255,255,255,.14);
+  --shadow:0 22px 60px -22px rgba(0,0,0,.9);
+  --glow-line:rgba(251,146,60,.55);
+  --radius:20px; --skin:sunset;
+}
+
+/* —— 全局：时间轴指示灯 —— */
+.tl-dot{width:8px;height:8px;border-radius:50%;background:var(--surface2);margin:0 auto 5px;transition:.2s var(--ease)}
+.tl-dot.on{background:var(--ok);box-shadow:0 0 10px var(--ok)}
+.tl-dot.on.rest{background:var(--warn);box-shadow:0 0 10px var(--warn)}
+[data-theme="keyboard"] .tl-dot{border-radius:2px;background:#1b3a44}
+[data-theme="keyboard"] .tl-dot.on{background:#00e5ff;box-shadow:0 0 10px #00e5ff}
+[data-theme="keyboard"] .tl-dot.on.work{background:#00ff88;box-shadow:0 0 10px #00ff88}
+[data-theme="keyboard"] .tl-dot.on.rest{background:#ffb02e;box-shadow:0 0 10px #ffb02e}
+[data-theme="cosmos"] .tl-dot{width:9px;height:9px;background:#2a2f55}
+[data-theme="cosmos"] .tl-dot.on{background:#a78bfa;box-shadow:0 0 14px #a78bfa}
+[data-theme="cat8"] .tl-dot{width:10px;height:10px;background:#f5e0cc}
+[data-theme="cat8"] .tl-dot.on{background:var(--acc);box-shadow:0 0 0 3px rgba(255,159,67,.22)}
+[data-theme="cat8"] .tl-dot.on.rest{background:var(--warn);box-shadow:0 0 0 3px rgba(255,183,3,.25)}
+
+/* —— 自定义背景 —— */
+body.has-bgimg{
+  background-image:var(--user-bg) !important;
+  background-size:cover; background-position:center; background-attachment:fixed;
+}
+body.has-bgimg::before{opacity:0 !important}
+
+/* ========== 有自定义背景时：全站毛玻璃（高斯模糊 + 透光） ========== */
+body.has-bgimg .wrap{position:relative;z-index:1}
+/* 所有卡片变成磨砂玻璃 */
+body.has-bgimg .card,
+body.has-bgimg .panel,
+body.has-bgimg .segbar,
+body.has-bgimg .sheet .panel{
+  backdrop-filter:blur(16px) saturate(150%);
+  -webkit-backdrop-filter:blur(16px) saturate(150%);
+  background:color-mix(in srgb, var(--surface2) 62%, transparent) !important;
+  border-color:color-mix(in srgb, var(--stroke) 70%, rgba(255,255,255,.14)) !important;
+  box-shadow:
+    0 8px 32px -12px rgba(0,0,0,.5),
+    inset 0 1px 0 rgba(255,255,255,.10),
+    inset 0 -1px 0 rgba(0,0,0,.14) !important;
+  transition:backdrop-filter .3s var(--ease), background .3s var(--ease),
+             box-shadow .25s var(--ease), transform .25s var(--ease), border-color .25s var(--ease);
+}
+/* 悬停时模糊更强 + 轻微浮起 + 透光增强 */
+body.has-bgimg .card:hover,
+body.has-bgimg .segbar:hover{
+  backdrop-filter:blur(24px) saturate(185%) brightness(1.06);
+  -webkit-backdrop-filter:blur(24px) saturate(185%) brightness(1.06);
+  background:color-mix(in srgb, var(--surface2) 52%, transparent) !important;
+  border-color:color-mix(in srgb, var(--acc) 40%, rgba(255,255,255,.2)) !important;
+  transform:translateY(-2px);
+  box-shadow:
+    0 16px 40px -14px rgba(0,0,0,.6),
+    0 0 0 1px color-mix(in srgb, var(--acc) 18%, transparent),
+    inset 0 1px 0 rgba(255,255,255,.16) !important;
+}
+/* 顶栏也磨砂 */
+body.has-bgimg .top{
+  backdrop-filter:blur(20px) saturate(160%);
+  -webkit-backdrop-filter:blur(20px) saturate(160%);
+  background:color-mix(in srgb, var(--bg) 42%, transparent);
+  border-radius:14px; padding:8px 10px; margin:-6px -6px 12px;
+  border:1px solid color-mix(in srgb, var(--stroke) 60%, transparent);
+}
+/* 内部小格也透一点光 */
+body.has-bgimg .cell,
+body.has-bgimg .rate{
+  background:color-mix(in srgb, var(--surface) 55%, transparent) !important;
+  backdrop-filter:blur(8px);
+  -webkit-backdrop-filter:blur(8px);
+  border-color:color-mix(in srgb, var(--stroke) 55%, transparent) !important;
+}
+/* 语录卡特殊处理：文字要更清楚 */
+body.has-bgimg .quotebox{
+  background:color-mix(in srgb, var(--surface2) 74%, transparent) !important;
+  backdrop-filter:blur(20px) saturate(170%);
+  -webkit-backdrop-filter:blur(20px) saturate(170%);
+}
+/* 按钮也磨砂 */
+body.has-bgimg .btn,
+body.has-bgimg .quote-refresh{
+  backdrop-filter:blur(10px);
+  -webkit-backdrop-filter:blur(10px);
+  background:color-mix(in srgb, var(--btn) 70%, transparent) !important;
+}
+/* 毛玻璃下的文字对比度补偿 */
+body.has-bgimg{ text-shadow:0 1px 2px rgba(0,0,0,.18); }
+body.has-bgimg .v,body.has-bgimg .pay,body.has-bgimg .num{ text-shadow:0 2px 6px rgba(0,0,0,.28); }
+
+/* 触摸时短暂加强模糊 */
+body.has-bgimg.bg-touch .card{backdrop-filter:blur(26px) saturate(190%);-webkit-backdrop-filter:blur(26px) saturate(190%)}
+
+/* 背景图的暗角 + 顶部渐变，保证顶部内容可读 */
+body.has-bgimg .bg-veil{
+  position:fixed; inset:0; z-index:0; pointer-events:none;
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(0,0,0,.42) 0%, transparent 55%),
+    linear-gradient(180deg, rgba(0,0,0,.30) 0%, transparent 22%, transparent 78%, rgba(0,0,0,.34) 100%);
+}
+
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{scroll-behavior:smooth}
+body{
+  margin:0; background:var(--bg); color:var(--txt); font-family:var(--f-ui);
+  min-height:100vh; overflow-x:hidden; line-height:1.5;
+  background-image:
+    radial-gradient(900px 520px at 12% -8%, var(--glow1), transparent 62%),
+    radial-gradient(760px 480px at 92% 4%, var(--glow2), transparent 60%),
+    radial-gradient(700px 520px at 50% 108%, var(--glow3), transparent 62%);
+  background-attachment:fixed;
+  transition:background-color .5s var(--ease), color .5s var(--ease);
+}
+body::before{
+  content:""; position:fixed; inset:0; pointer-events:none; z-index:0; opacity:.5;
+  background-image:var(--body-pattern);
+  background-size:44px 44px;
+  -webkit-mask-image:radial-gradient(ellipse 80% 55% at 50% 0%,#000 15%,transparent 75%);
+  mask-image:radial-gradient(ellipse 80% 55% at 50% 0%,#000 15%,transparent 75%);
+}
+[data-theme="matrix"] body::before{opacity:.9;background-size:26px 26px}
+[data-theme="keyboard"] body::before{opacity:.55;background-size:auto}
+[data-theme="cat8"] body::before{
+  background-image:radial-gradient(circle at center, rgba(230,150,80,.10) 1.5px, transparent 1.6px);
+  background-size:26px 26px; opacity:.5;
+  -webkit-mask-image:none; mask-image:none;
+}
+[data-theme="cosmos"] body::before{opacity:0}
+.wrap{max-width:1000px;margin:0 auto;padding:16px 15px 80px;position:relative;z-index:1}
+
+/* ---------- 顶栏 ---------- */
+.top{display:flex;align-items:center;gap:10px;padding:2px 2px 16px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:9px;font-size:12.5px;color:var(--txt2);letter-spacing:.4px;flex:1;min-width:130px}
+.pulse{width:8px;height:8px;border-radius:50%;background:var(--ok);box-shadow:0 0 12px var(--ok);flex:none;animation:pl 2.2s var(--ease) infinite}
+@keyframes pl{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.3;transform:scale(.8)}}
+.tools{display:flex;gap:7px;flex-wrap:wrap}
+.btn{
+  border:1px solid var(--stroke); background:var(--btn); color:var(--txt2);
+  border-radius:var(--r-sm); padding:8px 12px; font-size:12px; cursor:pointer;
+  font-family:var(--f-ui); transition:.18s var(--ease); display:inline-flex; align-items:center; gap:5px;
+  backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); white-space:nowrap;
+}
+.btn:hover{background:var(--btn-h); color:var(--txt); transform:translateY(-1px)}
+.btn.on{background:color-mix(in srgb,var(--acc) 20%,transparent); color:var(--acc); border-color:color-mix(in srgb,var(--acc) 45%,transparent)}
+.btn.sm{padding:6px 10px;font-size:11.5px}
+
+/* ---------- 皮肤切换 ---------- */
+.skins{display:flex;gap:7px;padding:4px;background:var(--surface);border:1px solid var(--stroke);
+  border-radius:999px;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);overflow-x:auto}
+.skin{flex:none;display:flex;align-items:center;gap:6px;padding:7px 12px;border-radius:999px;
+  cursor:pointer;font-size:11.5px;color:var(--txt2);border:1px solid transparent;transition:.2s var(--ease);white-space:nowrap}
+.skin:hover{background:var(--btn-h);color:var(--txt)}
+.skin.on{background:var(--surface2);color:var(--txt);border-color:var(--stroke);box-shadow:0 3px 14px -6px rgba(0,0,0,.5)}
+.skin i{width:13px;height:13px;border-radius:50%;flex:none;box-shadow:0 0 9px currentColor}
+
+/* ---------- 主体卡片 ---------- */
+.card{
+  background:var(--surface); border:1px solid var(--stroke); border-radius:var(--radius);
+  padding:20px 18px; backdrop-filter:blur(18px) saturate(140%); -webkit-backdrop-filter:blur(18px) saturate(140%);
+  box-shadow:var(--shadow); margin-bottom:14px; position:relative; overflow:hidden;
+}
+[data-theme="sakura"] .card{backdrop-filter:blur(6px);background:var(--surface2)}
+
+/* ---------- 实时主卡 ---------- */
+.hero{text-align:center;padding:30px 20px 24px}
+.hero .kick{font-size:11px;color:var(--txt2);letter-spacing:3px;text-transform:uppercase}
+.money{
+  font-family:var(--f-num); font-weight:800; letter-spacing:-3px; line-height:1;
+  margin:16px 0 6px; display:flex; align-items:baseline; justify-content:center; gap:1px;
+  background:var(--num-grad); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
+  filter:drop-shadow(0 6px 26px var(--glow-line));
+  font-size:clamp(44px,13.5vw,84px); font-variant-numeric:tabular-nums;
+}
+.money .cny{font-size:.32em;letter-spacing:0;-webkit-text-fill-color:var(--txt2);margin-right:3px;font-weight:700}
+.state{font-size:13.5px;color:var(--txt2);min-height:20px}
+.state b{color:var(--ok);font-weight:700}
+.state .sub{opacity:.55;font-size:12px}
+
+/* 汇率三联 */
+.rates{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:22px}
+.rate{background:var(--surface2);border:1px solid var(--stroke);border-radius:var(--r-md);padding:12px 6px;text-align:center;
+  transition:.2s var(--ease)}
+.rate:hover{transform:translateY(-2px);border-color:color-mix(in srgb,var(--acc) 40%,transparent)}
+.rate .k{font-size:10.5px;color:var(--txt3);letter-spacing:.5px;margin-bottom:5px}
+.rate .v{font-family:var(--f-num);font-size:15px;font-weight:700;color:var(--warn);font-variant-numeric:tabular-nums}
+
+/* 进度条 */
+.bar{margin-top:22px}
+.bhead{display:flex;justify-content:space-between;align-items:baseline;font-size:12px;margin-bottom:8px;gap:8px}
+.bhead .n{color:var(--txt2)}
+.bhead .n b{color:var(--txt);font-weight:700}
+.bhead .p{font-family:var(--f-num);color:var(--txt2);font-size:11.5px;font-variant-numeric:tabular-nums;flex:none}
+.track{height:10px;background:var(--surface2);border-radius:99px;overflow:hidden;position:relative;border:1px solid var(--stroke)}
+.fill{height:100%;border-radius:99px;width:0;transition:none;position:relative}
+.fill::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.28),transparent);
+  animation:shim 2.6s linear infinite}
+@keyframes shim{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+.fill.a{background:linear-gradient(90deg,color-mix(in srgb,var(--ok) 60%,transparent),var(--ok));box-shadow:0 0 16px color-mix(in srgb,var(--ok) 55%,transparent)}
+.fill.b{background:linear-gradient(90deg,color-mix(in srgb,var(--acc) 60%,transparent),var(--acc));box-shadow:0 0 16px color-mix(in srgb,var(--acc) 50%,transparent)}
+.track .ticks{position:absolute;inset:0;pointer-events:none;
+  background:repeating-linear-gradient(90deg,transparent 0,transparent calc(10% - 1px),var(--stroke) calc(10% - 1px),var(--stroke) 10%)}
+
+/* ---------- 卡片标题 ---------- */
+.ct{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px;flex-wrap:wrap}
+.ct h3{margin:0;font-size:13px;font-weight:700;letter-spacing:1.5px;color:var(--txt)}
+.ct .hint{font-size:11px;color:var(--txt3)}
+
+/* ---------- 数据格 ---------- */
+.grid{display:grid;gap:1px;background:var(--stroke);border:1px solid var(--stroke);
+  border-radius:var(--r-md);overflow:hidden}
+.g2{grid-template-columns:repeat(2,1fr)}
+.g3{grid-template-columns:repeat(3,1fr)}
+.g4{grid-template-columns:repeat(4,1fr)}
+.cell{background:var(--bg);padding:14px 13px;position:relative}
+[data-theme="sakura"] .cell{background:#fffafc}
+.cell .k{font-size:11px;color:var(--txt3);margin-bottom:6px;letter-spacing:.3px}
+.cell .v{font-family:var(--f-num);font-size:19px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.5px;line-height:1.2}
+.cell .s{font-size:10.5px;color:var(--txt3);margin-top:4px}
+.v.ok{color:var(--ok)} .v.wn{color:var(--warn)} .v.bd{color:var(--bad)} .v.ac{color:var(--acc)} .v.dim{color:var(--txt2)}
+
+/* ---------- 时间轴 ---------- */
+.tl{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:14px}
+.tlc{background:var(--surface2);border:1px solid var(--stroke);border-radius:var(--r-md);padding:12px 6px;text-align:center;position:relative;overflow:hidden}
+.tlc .k{font-size:10px;color:var(--txt3);margin-bottom:6px;letter-spacing:.3px}
+.tlc .v{font-family:var(--f-num);font-size:14px;font-weight:700;font-variant-numeric:tabular-nums}
+.tlc .mini{height:4px;border-radius:99px;background:var(--surface);margin-top:9px;overflow:hidden}
+.tlc .mini i{display:block;height:100%;width:0;border-radius:99px;transition:width .3s var(--ease)}
+
+/* ---------- 月份导航 ---------- */
+.mnav{display:flex;align-items:center;gap:8px}
+.mnav .label{font-family:var(--f-num);font-size:14px;font-weight:700;min-width:104px;text-align:center;letter-spacing:.5px}
+.arrow{width:30px;height:30px;border-radius:9px;border:1px solid var(--stroke);background:var(--btn);
+  color:var(--txt2);cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;transition:.16s var(--ease)}
+.arrow:hover{background:var(--btn-h);color:var(--txt)}
+.arrow:disabled{opacity:.25;cursor:not-allowed}
+
+/* ---------- 日历 ---------- */
+.calhead{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin-bottom:7px}
+.calhead div{text-align:center;font-size:10.5px;color:var(--txt3);letter-spacing:.5px}
+.calhead div.we{color:var(--txt2)}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
+.day{
+  aspect-ratio:1;border-radius:11px;background:var(--surface2);border:1px solid transparent;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+  cursor:pointer;position:relative;transition:.15s var(--ease);padding:2px;overflow:hidden;
+}
+.day:hover{transform:scale(1.09);z-index:3;border-color:var(--acc)}
+.day .dn{font-family:var(--f-num);font-size:12px;color:var(--txt2);font-weight:600}
+.day .am{font-family:var(--f-num);font-size:8.5px;color:var(--txt3);font-variant-numeric:tabular-nums;letter-spacing:-.3px}
+.day.rest{background:var(--surface);opacity:.62}
+.day.rest .dn{color:var(--txt3)}
+.day.hol{background:color-mix(in srgb,var(--bad) 14%,transparent);border-color:color-mix(in srgb,var(--bad) 30%,transparent)}
+.day.hol .dn{color:var(--bad)}
+.day.holWork{background:color-mix(in srgb,var(--warn) 17%,transparent);border-color:color-mix(in srgb,var(--warn) 38%,transparent)}
+.day.holWork .dn{color:var(--warn)}
+.day.work{background:color-mix(in srgb,var(--ok) 13%,transparent);border-color:color-mix(in srgb,var(--ok) 26%,transparent)}
+.day.work .dn{color:var(--ok)}
+.day.work .am{color:color-mix(in srgb,var(--ok) 70%,transparent)}
+.day.leave{background:color-mix(in srgb,var(--bad) 20%,transparent);border-color:color-mix(in srgb,var(--bad) 45%,transparent)}
+.day.leave .dn{color:var(--bad)}
+.day.half{background:color-mix(in srgb,var(--acc) 18%,transparent);border-color:color-mix(in srgb,var(--acc) 42%,transparent)}
+.day.half .dn{color:var(--acc)}
+.day.half .am{color:var(--acc);font-weight:700}
+.day.ot{background:color-mix(in srgb,var(--warn) 20%,transparent);border-color:color-mix(in srgb,var(--warn) 48%,transparent)}
+.day.ot .dn{color:var(--warn)}
+.day.ot .am{color:var(--warn);font-weight:700}
+.day.today{box-shadow:0 0 0 2px var(--acc),0 0 20px var(--glow-line);z-index:2}
+.day .tag{position:absolute;top:2px;right:3px;font-size:7px;font-weight:700;color:var(--warn);opacity:.9}
+.legend{display:flex;flex-wrap:wrap;gap:12px;margin-top:14px;font-size:10.5px;color:var(--txt3)}
+.legend i{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.calstat{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:9px}
+.calstat span{font-size:10.5px;color:var(--txt3);text-align:center;background:var(--surface);padding:7px 4px;border-radius:9px}
+.calstat b{display:block;font-family:var(--f-num);font-size:13px;color:var(--acc);margin-top:3px}
+.calstat2{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px;font-size:10.5px;color:var(--txt3)}
+.calstat2 b{font-family:var(--f-num);color:var(--txt)}
+.lg-work{background:color-mix(in srgb,var(--ok) 45%,transparent)}
+.lg-ot{background:color-mix(in srgb,var(--warn) 48%,transparent)}
+.lg-hw{background:color-mix(in srgb,var(--warn) 55%,transparent)}
+.lg-lv{background:color-mix(in srgb,var(--bad) 55%,transparent)}
+.lg-hf{background:color-mix(in srgb,var(--acc) 55%,transparent)}
+.lg-hol{background:color-mix(in srgb,var(--bad) 30%,transparent)}
+.lg-rest{background:var(--surface2)}
+
+/* ---------- 年度总览 ---------- */
+.year{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:9px}
+.mcard{
+  background:var(--surface2);border:1px solid var(--stroke);border-radius:var(--r-md);padding:13px 12px;
+  cursor:pointer;transition:.2s var(--ease);position:relative;overflow:hidden;
+}
+.mcard:hover{transform:translateY(-3px);border-color:var(--acc);box-shadow:0 12px 28px -14px var(--glow-line)}
+.mcard.cur{border-color:var(--acc);background:color-mix(in srgb,var(--acc) 9%,var(--surface2))}
+.mcard .mn{font-size:11.5px;color:var(--txt2);margin-bottom:8px;display:flex;justify-content:space-between;align-items:center}
+.mcard .mn b{font-family:var(--f-num);color:var(--txt);font-size:13px}
+.mcard .pay{font-family:var(--f-num);font-size:18px;font-weight:700;color:var(--ok);font-variant-numeric:tabular-nums;letter-spacing:-.6px}
+.mcard .sub{font-size:10px;color:var(--txt3);margin-top:5px;font-family:var(--f-num)}
+.mcard .msub{display:flex;align-items:center;gap:6px;font-size:9.5px;color:var(--txt3);margin-top:6px;
+  padding-top:6px;border-top:1px dashed var(--stroke)}
+.mcard .msub .lv{color:var(--bad)}
+.mcard .msub .go{margin-left:auto;color:var(--acc);opacity:0;transition:.2s var(--ease);font-weight:700}
+.mcard:hover .msub .go{opacity:1}
+.mcard .badge{position:absolute;top:9px;right:10px;font-size:8.5px;padding:2px 5px;border-radius:99px;
+  background:var(--surface);color:var(--txt3);border:1px solid var(--stroke)}
+.ytd{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:13px 15px;
+  background:linear-gradient(100deg,color-mix(in srgb,var(--acc) 15%,transparent),color-mix(in srgb,var(--acc2) 12%,transparent));
+  border:1px solid var(--stroke);border-radius:var(--r-md);margin-bottom:12px;flex-wrap:wrap}
+.ytd .k{font-size:11px;color:var(--txt2);letter-spacing:1px}
+.ytd .v{font-family:var(--f-num);font-size:24px;font-weight:800;color:var(--txt);font-variant-numeric:tabular-nums;letter-spacing:-1px}
+
+/* ---------- 说明 ---------- */
+.note{font-size:11.5px;color:var(--txt3);line-height:1.85;margin-top:14px;padding-top:13px;border-top:1px dashed var(--stroke)}
+.note b{color:var(--warn);font-family:var(--f-num);font-weight:700}
+.note .neg{color:var(--bad)}
+.note .pos{color:var(--ok)}
+
+/* ---------- 设置面板 ---------- */
+/* ★ z-index 必须高于 .mask(300) 和 .wheel-wrap(350)，
+     否则引导页会被老板键遮罩整层盖住，按钮点了没反应 */
+.sheet{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:500;display:none;align-items:flex-end;
+  justify-content:center}
+[data-theme="sakura"] .sheet{background:rgba(120,60,90,.34)}
+.sheet.show{display:flex}
+/* 新手引导已移除（强制弹窗在部分手机上无法点击，改为顶部提示 + 设置里手填） */
+.panel{background:var(--bg);border:1px solid var(--stroke);border-radius:26px 26px 0 0;width:100%;
+  max-width:660px;max-height:90vh;overflow:auto;padding:22px 18px 34px;box-shadow:0 -20px 70px -20px rgba(0,0,0,.9);
+  animation:up .32s var(--ease)}
+@keyframes up{from{transform:translateY(24px);opacity:0}to{transform:translateY(0);opacity:1}}
+.ph{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
+.ph h3{margin:0;font-size:16px;font-weight:700}
+.x{border:none;background:var(--btn);color:var(--txt2);width:33px;height:33px;border-radius:10px;cursor:pointer;font-size:15px;transition:.15s;position:relative;z-index:3;flex:none}
+.x:hover{background:var(--btn-h);color:var(--bad);transform:scale(1.08)}
+.x:hover{background:var(--btn-h);color:var(--txt)}
+.field{margin-bottom:17px}
+.field>label{display:block;font-size:11.5px;color:var(--txt2);margin-bottom:8px;letter-spacing:.4px;font-weight:600}
+.field input{width:100%;background:var(--surface);border:1px solid var(--stroke);border-radius:11px;padding:12px 13px;
+  color:var(--txt);font-family:var(--f-num);font-size:15px;font-variant-numeric:tabular-nums;transition:.15s}
+.field input:focus{outline:none;border-color:var(--acc);box-shadow:0 0 0 3px color-mix(in srgb,var(--acc) 18%,transparent)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px}
+.hint-s{font-size:10.5px;color:var(--txt3);margin-top:6px;line-height:1.6}
+.seg{display:flex;gap:7px;flex-wrap:wrap}
+.seg button{flex:1;min-width:88px;border:1px solid var(--stroke);background:var(--btn);color:var(--txt2);
+  padding:10px 12px;border-radius:11px;cursor:pointer;font-size:12px;font-family:var(--f-ui);transition:.16s var(--ease);text-align:left}
+.seg button:hover{background:var(--btn-h);color:var(--txt)}
+.seg button.on{background:color-mix(in srgb,var(--acc) 18%,transparent);color:var(--acc);border-color:color-mix(in srgb,var(--acc) 48%,transparent);font-weight:700}
+.seg button small{display:block;font-size:10px;opacity:.65;margin-top:3px;font-weight:400}
+.save{width:100%;padding:15px;border:none;border-radius:13px;background:var(--acc);color:#04121b;
+  font-size:15px;font-weight:800;cursor:pointer;font-family:var(--f-ui);margin-top:6px;transition:.18s var(--ease)}
+.save:hover{filter:brightness(1.1);transform:translateY(-1px)}
+.ghost{width:100%;padding:12px;border:1px solid var(--stroke);background:transparent;color:var(--txt2);
+  border-radius:12px;font-size:12.5px;cursor:pointer;margin-top:8px;font-family:var(--f-ui);transition:.16s}
+.ghost:hover{background:var(--btn);color:var(--txt)}
+.danger{width:100%;padding:12px;border:1px solid color-mix(in srgb,var(--bad) 40%,transparent);
+  background:color-mix(in srgb,var(--bad) 10%,transparent);color:var(--bad);border-radius:12px;font-size:12.5px;
+  cursor:pointer;margin-top:8px;font-family:var(--f-ui)}
+.danger:hover{background:color-mix(in srgb,var(--bad) 18%,transparent)}
+.sec-h{font-size:11px;color:var(--txt3);letter-spacing:2px;margin:22px 0 12px;font-weight:700}
+.sec-h:first-child{margin-top:0}
+
+/* ---------- 轮盘选择器 ---------- */
+/* ★ 轮盘必须高于日历弹窗（.sheet=500），否则会被盖住点不到 */
+.wheel-wrap{position:fixed;inset:0;background:rgba(0,0,0,.66);z-index:900;display:none;
+  align-items:center;justify-content:center;backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px)}
+.wheel-wrap.show{display:flex;animation:fade .2s var(--ease)}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+.wheel{position:relative;width:330px;max-width:90vw;animation:pop .34s var(--ease)}
+@keyframes pop{from{transform:scale(.82);opacity:0}to{transform:scale(1);opacity:1}}
+.wheel-hd{text-align:center;margin-bottom:14px}
+.wheel-hd .d{font-family:var(--f-num);font-size:22px;font-weight:800;color:var(--txt)}
+.wheel-hd .n{font-size:11.5px;color:var(--txt3);margin-top:4px}
+.wheel-ring{position:relative;width:100%;aspect-ratio:1}
+.wheel-ring svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.wheel-core{
+  position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+  width:88px;height:88px;border-radius:50%;background:var(--surface2);
+  border:1px solid var(--stroke);display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:3px;cursor:pointer;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);z-index:2;
+  transition:.2s var(--ease);box-shadow:0 8px 30px -10px rgba(0,0,0,.7);
+}
+.wheel-core:hover{transform:translate(-50%,-50%) scale(1.06);background:var(--btn-h)}
+.wheel-core .ic{font-size:20px;line-height:1}
+.wheel-core .t{font-size:9.5px;color:var(--txt3);letter-spacing:.5px}
+.wseg{
+  position:absolute;left:50%;top:50%;width:74px;height:74px;margin:-37px 0 0 -37px;
+  border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+  cursor:pointer;transition:.2s var(--ease);border:1px solid transparent;z-index:2;text-align:center;padding:4px;
+}
+.wseg .ic{font-size:17px;line-height:1}
+.wseg .t{font-size:10.5px;font-weight:700;line-height:1.15}
+.wseg .s{font-size:8.5px;opacity:.6;line-height:1}
+.wseg:hover{transform-origin:center;filter:brightness(1.25)}
+.wseg.cur{border-color:currentColor;box-shadow:0 0 0 2px currentColor inset}
+.wseg.w-work{background:color-mix(in srgb,var(--ok) 22%,var(--bg));color:var(--ok)}
+.wseg.w-off{background:var(--surface2);color:var(--txt2)}
+.wseg.w-lv{background:color-mix(in srgb,var(--bad) 22%,var(--bg));color:var(--bad)}
+.wseg.w-h1{background:color-mix(in srgb,var(--acc) 22%,var(--bg));color:var(--acc)}
+.wseg.w-h2{background:color-mix(in srgb,var(--acc2) 24%,var(--bg));color:var(--acc2)}
+.wheel-tip{text-align:center;font-size:10.5px;color:var(--txt3);margin-top:12px;line-height:1.7}
+
+/* ---------- PWA / 独立窗口适配 ---------- */
+/* iOS 独立模式：状态栏会盖住顶部，加安全区内边距 */
+@media (display-mode: standalone){
+  .wrap{padding-top:calc(16px + env(safe-area-inset-top));padding-bottom:calc(80px + env(safe-area-inset-bottom))}
+  .top{padding-bottom:12px}
+  #installSheet{--sat:env(safe-area-inset-top)}
+}
+@supports (padding:max(0px)){
+  .wrap{padding-left:max(15px, env(safe-area-inset-left));padding-right:max(15px, env(safe-area-inset-right))}
+  .panel{padding-bottom:calc(34px + env(safe-area-inset-bottom))}
+  .sheet{align-items:flex-end}
+}
+/* 独立窗口的标题栏区域：避免和拖拽/最小化按钮重叠 */
+@media (display-mode: window-controls-overlay){
+  .top{
+    padding-left:env(titlebar-area-x, 0px);
+    padding-right:env(titlebar-area-width, 100px);
+    -webkit-app-region:drag;
+  }
+  .top .btn,.top .brand{-webkit-app-region:no-drag}
+}
+/* 独立窗口里隐藏老板键说明类的浏览器默认行为 */
+@media (display-mode: standalone){
+  body{overscroll-behavior:none}
+  .toast{bottom:calc(28px + env(safe-area-inset-bottom))}
+}
+
+/* ---------- 时间选择器：必须自定义，否则深色主题下原生控件不可见/点不动 ---------- */
+.field input[type="time"],
+.field input[type="date"]{
+  -webkit-appearance:none; appearance:none;
+  width:100%; background:var(--surface); color:var(--txt);
+  border:1px solid var(--stroke); border-radius:11px;
+  padding:12px 13px; font-family:var(--f-num); font-size:15px;
+  font-variant-numeric:tabular-nums; letter-spacing:.5px;
+  min-height:46px; cursor:pointer; position:relative;
+}
+.field input[type="time"]:focus,.field input[type="date"]:focus{
+  outline:none;border-color:var(--acc);
+  box-shadow:0 0 0 3px color-mix(in srgb,var(--acc) 18%,transparent);
+}
+/* 时钟图标：跟随主题色 */
+.field input[type="time"]::-webkit-calendar-picker-indicator,
+.field input[type="date"]::-webkit-calendar-picker-indicator{
+  -webkit-appearance:none; appearance:none;
+  filter:invert(1) opacity(.55); cursor:pointer;
+  width:18px; height:18px; padding:0; margin:0;
+  background:transparent;
+}
+.field input[type="time"]::-webkit-calendar-picker-indicator:hover,
+.field input[type="date"]::-webkit-calendar-picker-indicator:hover{
+  filter:invert(1) opacity(1);
+}
+/* Firefox */
+.field input[type="time"]::-moz-clear-button,
+.field input[type="date"]::-moz-clear-button{ display:none; }
+.field input[type="time"]::-moz-focus-inner,
+.field input[type="date"]::-moz-focus-inner{ border:0; padding:0; }
+.field input{color-scheme:inherit}
+/* 主题明暗（由 applyTheme 用 style.colorScheme 设置，这里只做初始兜底） */
+:root{color-scheme:dark}
+
+/* ---------- 内联可编辑 ---------- */
+
+/* ---------- 皮肤装饰实体 ---------- */
+.skin-deco{pointer-events:none}
+.cat8-peek{position:absolute;pointer-events:none;z-index:2;line-height:0;pointer-events:none}
+
+/* ① 键盘科技：Hero 卡右上角迷你键盘 */
+[data-theme="keyboard"] .hero{position:relative}
+.kb-mini{
+  position:absolute;right:12px;top:12px;display:flex;flex-direction:column;gap:2px;
+  opacity:.5;z-index:2;pointer-events:none;transform:rotate(-3deg)
+}
+.kb-row{display:flex;gap:2px}
+.kb-mini span{
+  font-family:ui-monospace,Consolas,monospace;font-size:7.5px;line-height:1;
+  min-width:15px;height:13px;display:flex;align-items:center;justify-content:center;
+  color:var(--acc);background:var(--btn);border:1px solid var(--stroke);border-radius:3px;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.16),inset 0 -1.5px 0 rgba(0,0,0,.6);
+}
+.kb-mini span:active{box-shadow:inset 0 1px 3px rgba(0,0,0,.8)}
+/* 轴心指示灯 */
+[data-theme="keyboard"] .cell{position:relative}
+.kb-led{
+  position:absolute;right:8px;top:8px;width:5px;height:5px;border-radius:1px;
+  background:var(--ok);box-shadow:0 0 7px var(--ok);opacity:.7;animation:kbLed 2.4s ease-in-out infinite
+}
+.kb-led:nth-child(2n){background:var(--acc);box-shadow:0 0 7px var(--acc);animation-delay:.5s}
+.kb-led:nth-child(3n){background:var(--acc2);box-shadow:0 0 7px var(--acc2);animation-delay:1s}
+@keyframes kbLed{0%,100%{opacity:.25}50%{opacity:.9}}
+/* 代码雨 */
+[data-theme="keyboard"] .quotebox{position:relative}
+.kb-rain{
+  position:absolute;left:0;right:0;bottom:0;height:100%;display:flex;gap:4px;padding:0 12px 8px;
+  align-items:flex-end;opacity:.22;z-index:0;overflow:hidden
+}
+.kb-rain span{
+  flex:1;max-width:3px;border-radius:2px 2px 0 0;
+  background:linear-gradient(180deg,transparent,var(--acc));
+  animation:rainFall 2.6s linear infinite
+}
+@keyframes rainFall{0%{transform:translateY(30px);opacity:0}30%{opacity:1}100%{transform:translateY(-10px);opacity:0}}
+@media(max-width:520px){ .kb-mini{display:none} }
+
+/* ② 宇宙星球：Hero 星环 + 行星 */
+[data-theme="cosmos"] .hero{position:relative}
+.cosmos-hero{position:absolute;inset:0;pointer-events:none;z-index:1;overflow:hidden;border-radius:inherit}
+.orbit{
+  position:absolute;border-radius:50%;border:1px solid rgba(167,139,250,.16);
+  top:50%;right:-40px;transform:translateY(-50%)
+}
+.o1{width:190px;height:190px;animation:spin 26s linear infinite}
+.o2{width:290px;height:290px;border-color:rgba(96,165,250,.11);animation:spin 40s linear infinite reverse}
+.o3{width:400px;height:400px;border-color:rgba(255,255,255,.055);animation:spin 62s linear infinite}
+@keyframes spin{from{transform:translateY(-50%) rotate(0)}to{transform:translateY(-50%) rotate(360deg)}}
+.planet{position:absolute;top:-4px;left:50%;margin-left:-4px;width:8px;height:8px;border-radius:50%;display:block}
+.o2 .planet{width:6px;height:6px;top:-3px}
+.o3 .planet{width:5px;height:5px;top:-2.5px}
+.p1{background:#a78bfa;box-shadow:0 0 12px #a78bfa,0 0 24px rgba(167,139,250,.5)}
+.p2{background:#60a5fa;box-shadow:0 0 11px #60a5fa,0 0 22px rgba(96,165,250,.45)}
+.p3{background:#4ade80;box-shadow:0 0 10px #4ade80,0 0 20px rgba(74,222,128,.4)}
+.spark{position:absolute;border-radius:50%;background:#fff;animation:twinkle 3.4s ease-in-out infinite alternate}
+.s1{width:2px;height:2px;top:22%;right:26%}
+.s2{width:1.5px;height:1.5px;top:38%;right:14%;animation-delay:.8s}
+.s3{width:2.5px;height:2.5px;top:64%;right:34%;animation-delay:1.5s}
+.s4{width:1.5px;height:1.5px;top:78%;right:20%;animation-delay:2.2s}
+/* 数据格小行星 */
+[data-theme="cosmos"] .rate{position:relative}
+.cosmos-dot{
+  position:absolute;right:7px;top:7px;width:4px;height:4px;border-radius:50%;
+  background:var(--acc);box-shadow:0 0 8px var(--acc);opacity:.6
+}
+/* 陨石 */
+[data-theme="cosmos"] .quotebox{position:relative}
+.cosmos-meteor{position:absolute;inset:0;pointer-events:none;z-index:0;overflow:hidden;border-radius:inherit}
+.cosmos-meteor span{
+  position:absolute;width:2px;height:2px;border-radius:50%;background:#fff;
+  box-shadow:0 0 6px #fff;animation:meteor 7s linear infinite
+}
+.cosmos-meteor .m1{top:-4%;left:18%;animation-delay:0s}
+.cosmos-meteor .m2{top:-4%;left:58%;animation-delay:2.6s}
+.cosmos-meteor .m3{top:-4%;left:82%;animation-delay:5s}
+@keyframes meteor{
+  0%{transform:translate(0,0) scale(.6);opacity:0}
+  8%{opacity:1}
+  100%{transform:translate(-70px,220px) scale(1);opacity:0}
+}
+
+/* ③ 八条 */
+[data-theme="cat8"] .card{position:relative;overflow:hidden}
+[data-theme="cat8"] .quotebox > .cat8-peek{right:12px;bottom:10px;top:auto;opacity:.5;width:50px}
+[data-theme="cat8"] .rankcard > .cat8-peek{right:16px;bottom:6px;top:auto;width:58px;opacity:.9}
+[data-theme="cat8"] .rankcard > .cat8-peek svg{filter:drop-shadow(0 3px 7px rgba(230,140,60,.35))}
+[data-theme="cat8"] .cell{position:relative}
+[data-theme="cat8"] .cell::after{
+  content:"";position:absolute;right:-7px;bottom:-7px;width:24px;height:24px;opacity:.07;pointer-events:none;
+  background:radial-gradient(circle at 50% 60%,var(--acc) 42%,transparent 44%),
+             radial-gradient(circle at 22% 30%,var(--acc) 17%,transparent 19%),
+             radial-gradient(circle at 40% 22%,var(--acc) 15%,transparent 17%),
+             radial-gradient(circle at 62% 24%,var(--acc) 15%,transparent 17%),
+             radial-gradient(circle at 78% 32%,var(--acc) 17%,transparent 19%);
+}
+
+/* ---------- 牛马语录卡 ---------- */
+.quotebox{position:relative;padding:16px 18px 15px;overflow:hidden}
+.quote-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
+.quote-badge{font-size:10px;letter-spacing:2px;color:var(--txt3);font-weight:700}
+.quote-refresh{
+  border:1px solid var(--stroke);background:var(--btn);color:var(--txt2);
+  border-radius:999px;width:28px;height:28px;cursor:pointer;display:flex;align-items:center;justify-content:center;
+  font-size:14px;transition:.24s var(--ease);flex:none
+}
+.quote-refresh:hover{background:var(--btn-h);color:var(--acc);transform:rotate(180deg)}
+.quote-refresh.spin{animation:spin .5s var(--ease)}
+@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+.quote-text{
+  font-size:14.5px;line-height:1.8;color:var(--txt);min-height:52px;
+  transition:opacity .2s var(--ease),transform .2s var(--ease)
+}
+.quote-text.fade{opacity:0;transform:translateY(6px)}
+.quote-text b{color:var(--acc);font-weight:700}
+.quote-text.clickable{cursor:pointer}
+.quote-text.clickable:hover{opacity:.85}
+/* 彩蛋模式高亮 */
+.quotebox.egg{box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--warn) 42%,transparent), 0 0 22px -8px color-mix(in srgb,var(--warn) 40%,transparent)}
+.quotebox.egg .quote-text{color:var(--warn);font-weight:600}
+.quotebox.egg #quoteBadge{color:var(--warn);opacity:1}
+
+/* ---------- 评级卡 ---------- */
+.rankcard{display:flex;align-items:center;gap:14px;padding:15px 17px;position:relative;overflow:hidden}
+.rank-tag{font-size:9.5px;letter-spacing:2px;font-weight:700;margin-bottom:3px}
+.rank-num{font-family:var(--f-num);font-size:10.5px;color:var(--txt3);margin-top:6px;font-variant-numeric:tabular-nums}
+.rank-emoji{font-size:42px;line-height:1;filter:drop-shadow(0 4px 12px rgba(0,0,0,.35))}
+.rank-body{flex:1;min-width:0}
+.rank-lv{font-size:10px;color:var(--txt3);letter-spacing:2px;font-weight:700}
+.rank-name{font-size:26px;font-weight:800;letter-spacing:-.5px;line-height:1.15;margin:2px 0 4px}
+.rank-desc{font-size:11.5px;color:var(--txt2);line-height:1.6}
+.rank-meter{height:6px;background:var(--surface2);border-radius:99px;margin-top:10px;overflow:hidden}
+.rank-meter i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--acc),var(--acc2));transition:width .5s var(--ease)}
+.rank-keys{display:flex;gap:5px;margin-top:11px;flex-wrap:wrap}
+.rank-keys .rk{font-size:9px;padding:3px 7px;border-radius:99px;border:1px solid var(--stroke);color:var(--txt3)}
+.rank-keys .rk.on{background:var(--acc);color:#fff;border-color:var(--acc)}
+.shopline{
+  font-size:13px;line-height:1.7;color:var(--txt2);margin-top:12px;padding-top:12px;
+  border-top:1px dashed var(--stroke)
+}
+.shopline b{color:var(--warn);font-weight:800;font-size:15px}
+.shop-items{display:flex;gap:7px;flex-wrap:wrap;margin-top:9px}
+.shop-item{
+  font-size:11px;padding:5px 10px;border-radius:99px;
+  background:var(--surface2);border:1px solid var(--stroke);color:var(--txt3);
+  display:inline-flex;align-items:center;gap:5px
+}
+.shop-item.can{border-color:var(--ok);color:var(--ok);background:color-mix(in srgb,var(--ok) 10%,transparent)}
+.shop-item b{font-family:var(--f-num);font-weight:700}
+
+/* ---------- 可拖动时间轴（三段独立进度条） ---------- */
+.segbars{display:flex;flex-direction:column;gap:13px;margin-top:16px}
+.segbar{
+  background:var(--surface2);border:1px solid var(--stroke);border-radius:var(--radius);
+  padding:12px 14px 11px;transition:.2s var(--ease)
+}
+.segbar:hover{border-color:color-mix(in srgb,var(--acc) 40%,transparent)}
+.sb-head{display:flex;justify-content:space-between;align-items:center;font-size:12px;margin-bottom:9px;gap:8px}
+.sb-name{display:flex;align-items:center;gap:7px;font-weight:700;color:var(--txt)}
+.sb-name .tl-dot{margin:0;flex:none}
+.sb-time{font-family:var(--f-num);font-size:11.5px;color:var(--txt2);font-variant-numeric:tabular-nums}
+/* 段内轨道：整条就是这一段，不显示全天刻度，前方没有黑块 */
+.sb-track.seg{
+  height:20px;border-radius:99px;background:rgba(0,0,0,.28);
+  border:1px solid var(--stroke);position:relative;cursor:pointer;
+  touch-action:none;user-select:none;-webkit-user-select:none;overflow:visible
+}
+.segbar:hover .sb-track.seg{border-color:color-mix(in srgb,var(--acc) 50%,transparent)}
+.sb-fill{position:absolute;left:0;top:2px;bottom:2px;border-radius:99px;width:0;left:0}
+.sb-fill.work{background:linear-gradient(90deg,color-mix(in srgb,var(--ok) 50%,transparent),var(--ok))}
+.sb-fill.rest{background:linear-gradient(90deg,color-mix(in srgb,var(--warn) 50%,transparent),var(--warn))}
+.sb-fill.all{background:linear-gradient(90deg,color-mix(in srgb,var(--acc) 40%,transparent),var(--acc2))}
+/* 唯一的手柄：右端 */
+.sb-knob.r{
+  position:absolute;top:50%;left:100%;width:14px;height:26px;margin:-13px 0 0 -7px;
+  border-radius:7px;background:var(--surface2);border:2px solid var(--acc);
+  cursor:ew-resize;transition:box-shadow .16s var(--ease);z-index:3;
+  box-shadow:0 2px 10px -2px rgba(0,0,0,.7)
+}
+.sb-knob.r::after{content:"";position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+  width:2px;height:10px;border-radius:2px;background:var(--acc);
+  box-shadow:-2.5px 0 0 var(--acc),2.5px 0 0 var(--acc)}
+.sb-knob.r:hover,.sb-knob.r.active{box-shadow:0 0 14px var(--acc);transform:scale(1.12)}
+.segbar.dragging .sb-track.seg{border-color:var(--acc);box-shadow:0 0 0 3px color-mix(in srgb,var(--acc) 16%,transparent)}
+.segbar.dragging .sb-knob{background:var(--acc);box-shadow:0 0 18px var(--acc)}
+.segbar.dragging .sb-knob::after{background:var(--bg)}
+/* 正在进行 / 已完成 */
+.segbar.now{background:var(--surface)}
+.segbar.now .sb-name{color:var(--ok)}
+.segbar.done{opacity:.72}
+.segbar.done .sb-fill{filter:saturate(.7) brightness(.85)}
+/* 已超时：条满格 + 红光提示 */
+.segbar.over .sb-track.seg{border-color:color-mix(in srgb,var(--bad) 55%,transparent)}
+.segbar.over .sb-fill{filter:none !important;
+  background:linear-gradient(90deg,color-mix(in srgb,var(--bad) 40%,transparent),var(--bad)) !important}
+.segbar.over .sb-name{color:var(--bad)}
+/* 预设层：拖动设定的未来部分（斜纹），和"已过"的实心部分区分 */
+.sb-pre{
+  position:absolute;top:2px;bottom:2px;border-radius:0 99px 99px 0;
+  pointer-events:none;opacity:.42;
+  background:repeating-linear-gradient(115deg,
+    rgba(255,255,255,.55) 0 4px, transparent 4px 9px);
+}
+.sb-pre.rest{
+  background:repeating-linear-gradient(115deg,
+    rgba(255,255,255,.5) 0 4px, transparent 4px 9px);
+}
+.sb-foot{display:flex;justify-content:space-between;align-items:center;font-size:10.5px;color:var(--txt3);margin-top:7px;gap:8px}
+.sb-grip{color:var(--acc);opacity:.6;font-weight:700;flex:none;font-size:10px}
+.sb-grip.readonly{color:var(--txt3);opacity:.5}
+.segbar.overall{background:var(--surface);border-style:dashed}
+.segbar.overall .sb-track.seg{cursor:default}
+.dtl-reset{
+  border:1px solid var(--stroke);background:var(--btn);color:var(--txt2);
+  border-radius:999px;padding:6px 13px;font-size:11px;cursor:pointer;transition:.16s var(--ease);
+  font-family:var(--f-ui)
+}
+.dtl-reset:hover{background:var(--btn-h);color:var(--acc);border-color:var(--acc)}
+.dtl-reset:active{transform:scale(.95)}
+.tlresets{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-top:12px}
+.tlresets .dtl-reset{font-size:11px;padding:6px 12px}
+.tlresets .dtl-reset.all{background:color-mix(in srgb,var(--acc) 14%,transparent);color:var(--acc);border-color:color-mix(in srgb,var(--acc) 40%,transparent)}
+
+/* ---------- 调色盘 ---------- */
+.palette{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.pal-item{display:flex;align-items:center;gap:9px;background:var(--surface2);border:1px solid var(--stroke);
+  border-radius:11px;padding:9px 11px}
+.pal-item input[type=color]{
+  width:30px;height:30px;border:none;border-radius:8px;cursor:pointer;background:none;padding:0;flex:none
+}
+.pal-item input[type=color]::-webkit-color-swatch-wrapper{padding:0}
+.pal-item input[type=color]::-webkit-color-swatch{border:1px solid var(--stroke);border-radius:8px}
+.pal-item .pn{font-size:11.5px;color:var(--txt2);flex:1;line-height:1.3}
+.pal-item .pv{font-family:var(--f-num);font-size:9.5px;color:var(--txt3)}
+.bg-upload{border:2px dashed var(--stroke);border-radius:14px;padding:22px;text-align:center;
+  cursor:pointer;transition:.18s var(--ease);margin-bottom:10px}
+.bg-upload:hover{border-color:var(--acc);background:var(--surface)}
+.bg-upload .ic{font-size:26px;margin-bottom:8px}
+.bg-upload .t{font-size:12.5px;color:var(--txt2)}
+.bg-upload .s{font-size:10.5px;color:var(--txt3);margin-top:5px}
+.bg-preview{width:100%;height:110px;border-radius:11px;background-size:cover;background-position:center;
+  border:1px solid var(--stroke);margin-bottom:10px;display:none}
+
+/* ---------- 皮肤选择器 ---------- */
+.skins{display:flex;gap:8px;padding:5px;background:var(--surface);border:1px solid var(--stroke);
+  border-radius:999px;overflow-x:auto;scrollbar-width:none}
+.skins::-webkit-scrollbar{display:none}
+.skin{flex:none;display:flex;align-items:center;gap:7px;padding:8px 13px;border-radius:999px;
+  cursor:pointer;font-size:11.5px;color:var(--txt2);border:1px solid transparent;transition:.2s var(--ease);white-space:nowrap}
+.skin:hover{background:var(--btn-h);color:var(--txt)}
+.skin.on{background:var(--surface2);color:var(--txt);border-color:var(--stroke);box-shadow:0 3px 14px -6px rgba(0,0,0,.5)}
+.skin i{width:15px;height:15px;border-radius:50%;flex:none;box-shadow:0 0 9px currentColor}
+
+.inline-edit{
+  display:inline-flex;align-items:center;gap:5px;justify-content:center;
+  background:transparent;border:1px dashed var(--stroke);border-radius:9px;
+  padding:5px 9px;font-family:var(--f-num);font-size:inherit;color:inherit;
+  cursor:text;transition:.16s var(--ease);max-width:100%;
+}
+.inline-edit:hover{border-color:var(--acc);background:var(--surface)}
+.inline-edit:focus{outline:none;border-style:solid;border-color:var(--acc);
+  background:var(--surface2);box-shadow:0 0 0 3px color-mix(in srgb,var(--acc) 16%,transparent)}
+.inline-edit::after{content:"✎";font-size:10px;opacity:.35;font-family:var(--f-ui)}
+.inline-edit:focus::after{content:"⏎";opacity:.8}
+.cell .inline-edit{font-size:19px;font-weight:700;letter-spacing:-.5px}
+.cell .inline-edit.sep::after{display:none}
+
+/* ---------- 老板键 ---------- */
+/* 老板键（.mask）的样式已随功能一起移除 */
+
+/* ---------- Toast ---------- */
+.toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(100px);
+  background:var(--surface2);border:1px solid var(--stroke);border-radius:14px;padding:13px 22px;font-size:13px;
+  z-index:400;transition:.34s var(--ease);pointer-events:none;box-shadow:var(--shadow);max-width:90vw;text-align:center;
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
+.toast.show{transform:translateX(-50%) translateY(0)}
+.toast b{color:var(--warn);font-family:var(--f-num)}
+
+.fabrow{display:flex;gap:8px;justify-content:center;margin-top:4px;flex-wrap:wrap}
+@media(max-width:640px){
+  .rates{grid-template-columns:1fr 1fr}
+  .rates .rate:last-child{grid-column:span 2}
+  .tl{grid-template-columns:repeat(2,1fr)}
+  .g4{grid-template-columns:repeat(2,1fr)}
+}
+</style>
+</head>
+<body>
+<div class="bg-veil" id="bgVeil"></div>
+<div class="wrap">
+
+  <!-- 顶栏 -->
+  <div class="top">
+    <div class="brand"><span class="pulse"></span><span id="liveLbl">实时工资监测中</span></div>
+    <div class="tools">
+      <button class="btn sm" id="btnInstall" title="安装到桌面 / 手机" style="display:none">📲 安装</button>
+      <button class="btn sm" id="btnYear" title="全年总览">📊 全年</button>
+      <button class="btn sm" id="btnCal" title="出勤日历">📅</button>
+      <button class="btn sm" id="btnSet" title="设置">⚙️</button>
+    </div>
+  </div>
+
+  <!-- 皮肤 -->
+  <div class="skins" id="skins"></div>
+
+  <!-- 实时主卡 -->
+  <div class="card hero">
+    <div class="kick" id="heroKick">今 日 已 赚</div>
+    <div class="money"><span class="cny">¥</span><span id="heroVal">0.000</span></div>
+    <div class="state" id="heroState">—</div>
+
+    <div class="rates">
+      <div class="rate"><div class="k">每秒</div><div class="v" id="rSec">¥0.0000</div></div>
+      <div class="rate"><div class="k">每分钟</div><div class="v" id="rMin">¥0.00</div></div>
+      <div class="rate"><div class="k">时薪</div><div class="v" id="rHour">¥0.00</div></div>
+    </div>
+
+    <!-- 可直接点击修改：月薪 / 上班 / 下班 / 午休 -->
+    <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:18px;font-size:12px">
+      <span style="color:var(--txt3)">月薪</span>
+      <span class="inline-edit" id="eSalary" title="点击修改月薪">¥7000</span>
+      <span style="opacity:.4">·</span>
+      <span class="inline-edit" id="eStart" title="点击修改上班时间">09:30</span>
+      <span style="color:var(--txt3)">→</span>
+      <span class="inline-edit" id="eEnd" title="点击修改下班时间">18:30</span>
+      <span style="opacity:.4">·</span>
+      <span style="color:var(--txt3)">午休</span>
+      <span class="inline-edit" id="eLunch" title="点击修改午休时段">12:00-13:00</span>
+      <span style="opacity:.4">·</span>
+      <span class="inline-edit" id="eHours" title="点击修改每日计薪工时">8h</span>
+    </div>
+
+    <div class="bar">
+      <div class="bhead">
+        <span class="n">今日进度 <b id="tHours">0.0 / 8.0 h</b></span>
+        <span class="p" id="tPct">0%</span>
+      </div>
+      <div class="track"><div class="fill a" id="tFill"><div class="ticks"></div></div></div>
+    </div>
+    <div class="bar">
+      <div class="bhead">
+        <span class="n">本月到手 <b id="mGot">¥0</b> / <span id="mExp">¥0</span></span>
+        <span class="p" id="mPct">0%</span>
+      </div>
+      <div class="track"><div class="fill b" id="mFill"><div class="ticks"></div></div></div>
+    </div>
+  </div>
+
+  <!-- 牛马语录 -->
+  <div class="card quotebox">
+    <div class="quote-top">
+      <span class="quote-badge" id="quoteBadge">牛 马 语 录</span>
+      <button class="quote-refresh" id="btnQuote" title="换一条（按 R）">🔄</button>
+    </div>
+    <div class="quote-text" id="quoteText">加载中…</div>
+  </div>
+
+  <!-- 今日详情 -->
+  <div class="card">
+    <div class="ct"><h3>今 日 详 情</h3><span class="hint" id="todayDate">—</span></div>
+    <div class="grid g2">
+      <div class="cell"><div class="k">今日日薪</div><div class="v ok" id="cDay">¥0.00</div><div class="s" id="cDayS">—</div></div>
+      <div class="cell"><div class="k">今日还能赚</div><div class="v wn" id="cLeft">¥0.00</div><div class="s" id="cLeftS">—</div></div>
+      <div class="cell"><div class="k">上班 / 下班</div><div class="v dim" id="cTime" style="font-size:16px">—</div><div class="s" id="cLunch">—</div></div>
+      <div class="cell"><div class="k">当前状态（点击轮盘改）</div><div class="v dim" id="cState" style="font-size:16px">—</div><div class="s" id="cStateS">—</div></div>
+    </div>
+    <!-- 三段可拖动进度条：起始不留黑条，尾端可拖到任意位置 -->
+    <div class="segbars">
+      <div class="segbar" id="segA">
+        <div class="sb-head">
+          <span class="sb-name"><span class="tl-dot" id="td0"></span>上午上班</span>
+          <span class="sb-time"><span id="tlA1">—</span> → <span id="tlA2">—</span></span>
+        </div>
+        <div class="sb-track seg" id="trkA">
+          <div class="sb-fill work" id="filA"></div>
+          <div class="sb-pre" id="preA"></div>
+          <div class="sb-knob r" id="knbA"><i></i></div>
+        </div>
+        <div class="sb-foot"><span id="txtA">—</span><span class="sb-grip">拖右端 ▶</span></div>
+      </div>
+
+      <div class="segbar" id="segB">
+        <div class="sb-head">
+          <span class="sb-name"><span class="tl-dot" id="td1"></span>午休</span>
+          <span class="sb-time"><span id="tlB1">—</span> → <span id="tlB2">—</span></span>
+        </div>
+        <div class="sb-track seg" id="trkB">
+          <div class="sb-fill rest" id="filB"></div>
+          <div class="sb-pre rest" id="preB"></div>
+          <div class="sb-knob r" id="knbB"><i></i></div>
+        </div>
+        <div class="sb-foot"><span id="txtB">—</span><span class="sb-grip">拖右端 ▶</span></div>
+      </div>
+
+      <div class="segbar" id="segC">
+        <div class="sb-head">
+          <span class="sb-name"><span class="tl-dot" id="td2"></span>下午上班</span>
+          <span class="sb-time"><span id="tlC1">—</span> → <span id="tlC2">—</span></span>
+        </div>
+        <div class="sb-track seg" id="trkC">
+          <div class="sb-fill work" id="filC"></div>
+          <div class="sb-pre" id="preC"></div>
+          <div class="sb-knob r" id="knbC"><i></i></div>
+        </div>
+        <div class="sb-foot"><span id="txtC">—</span><span class="sb-grip">拖右端 ▶</span></div>
+      </div>
+    </div>
+
+    <!-- 今日整体（只读，从上班时间算到下班时间） -->
+    <div class="segbar overall">
+      <div class="sb-head">
+        <span class="sb-name">今 日 整 体</span>
+        <span class="sb-time" id="txtO">—</span>
+      </div>
+      <div class="sb-track seg" id="trkO"><div class="sb-fill all" id="filO"></div></div>
+      <div class="sb-foot"><span id="txtON">—</span><span class="sb-grip readonly">只读</span></div>
+    </div>
+
+    <div class="tlresets">
+      <button class="dtl-reset" id="btnResetUp">上班复位</button>
+      <button class="dtl-reset" id="btnResetNoon">午休复位</button>
+      <button class="dtl-reset" id="btnResetDown">下班复位</button>
+      <button class="dtl-reset all" id="btnTlReset">全部复位</button>
+    </div>
+    <div style="text-align:center;font-size:10px;color:var(--txt3);margin-top:7px">
+      三段互相独立 · 拖右端可停在任意位置 · 拖完看看语录会说什么 🤡
+    </div>
+  </div>
+
+  <!-- 双维度评级 -->
+  <div class="card rankcard" id="rankTodayCard">
+    <div class="rank-emoji" id="rkTEmoji">🙂</div>
+    <div class="rank-body">
+      <div class="rank-tag" style="color:var(--acc)">今 日 已 赚</div>
+      <div class="rank-name" id="rkTName">—</div>
+      <div class="rank-desc" id="rkTDesc">—</div>
+      <div class="rank-meter"><i id="rkTBar" style="width:0%"></i></div>
+      <div class="rank-num" id="rkTNum">¥0 / ¥0</div>
+    </div>
+  </div>
+
+  <div class="card rankcard" id="rankMonthCard">
+    <div class="rank-emoji" id="rkMEmoji">🙂</div>
+    <div class="rank-body">
+      <div class="rank-tag" style="color:var(--warn)">本 月 累 计</div>
+      <div class="rank-name" id="rkMName">—</div>
+      <div class="rank-desc" id="rkMDesc">—</div>
+      <div class="rank-meter"><i id="rkMBar" style="width:0%"></i></div>
+      <div class="rank-num" id="rkMNum">¥0 / ¥0</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="ct"><h3>购 物 力 对 照</h3>
+      <div class="seg" id="shopSeg" style="flex:none">
+        <button data-v="today" class="on">今日赚的</button>
+        <button data-v="month">本月累计</button>
+      </div>
+    </div>
+    <div class="shopline" id="shopLine">—</div>
+    <div class="shop-items" id="shopItems"></div>
+  </div>
+
+  <!-- 本月账目 -->
+  <div class="card">
+    <div class="ct">
+      <h3 id="monthTitle">本 月 账 目</h3>
+      <div class="mnav">
+        <button class="arrow" id="prevM" title="上一月">‹</button>
+        <span class="label" id="mLabel">—</span>
+        <button class="arrow" id="nextM" title="下一月">›</button>
+      </div>
+    </div>
+    <div class="grid g4">
+      <div class="cell"><div class="k">应出勤</div><div class="v" id="mDays">0</div><div class="s">含请假</div></div>
+      <div class="cell"><div class="k">日薪</div><div class="v ok" id="mRate">¥0.00</div><div class="s">月薪 ÷ 应出勤</div></div>
+      <div class="cell"><div class="k">预计到手</div><div class="v wn" id="mFinal">¥0.00</div><div class="s" id="mFinalS">—</div></div>
+      <div class="cell"><div class="k">请假扣款</div><div class="v bd" id="mDeduct">¥0.00</div><div class="s" id="mLeaveS">—</div></div>
+      <div class="cell"><div class="k">已出勤</div><div class="v" id="mWorked">0</div><div class="s">已过工作日</div></div>
+      <div class="cell"><div class="k">之后还能赚</div><div class="v ac" id="mFuture">¥0.00</div><div class="s" id="mFutureS">—</div></div>
+      <div class="cell"><div class="k">节假日上班</div><div class="v wn" id="mHolWork">0</div><div class="s">全薪平摊</div></div>
+      <div class="cell"><div class="k">加班费</div><div class="v" id="mOtPay" style="color:var(--warn)">¥0.00</div><div class="s" id="mOtS">无加班</div></div>
+      <div class="cell"><div class="k">距发薪</div><div class="v ac" id="mPay">0</div><div class="s" id="mPayS">—</div></div>
+    </div>
+    <div class="note" id="calcNote"></div>
+  </div>
+
+  <!-- 全年 -->
+  <div class="card" id="yearCard" style="display:none">
+    <div class="ct">
+      <h3>全 年 工 资 总 览</h3>
+      <div class="mnav">
+        <button class="arrow" id="prevY">‹</button>
+        <span class="label" id="yLabel">2026</span>
+        <button class="arrow" id="nextY">›</button>
+      </div>
+    </div>
+    <div class="ytd">
+      <div><div class="k">全年预计到手</div><div class="v" id="yTotal">¥0</div></div>
+      <div style="text-align:right"><div class="k">全年应出勤</div><div class="v" id="yDays" style="font-size:18px">0 天</div></div>
+    </div>
+    <div class="year" id="yearGrid"></div>
+    <div class="note" id="yearNote"></div>
+  </div>
+
+  <div class="fabrow">
+    <button class="btn sm" id="btnYear2">📊 全年总览</button>
+  </div>
+</div>
+
+<!-- 老板键已移除 -->
+
+<!-- 日历 -->
+<div class="sheet" id="calSheet">
+  <div class="panel">
+    <div class="ph"><h3 id="calTitle">出勤日历</h3><button class="x" data-close>✕</button></div>
+    <div class="msgtip" style="font-size:11.5px;color:var(--txt3);background:var(--surface);border-left:2px solid var(--acc);padding:11px 13px;border-radius:0 10px 10px 0;line-height:1.8;margin-bottom:16px">
+      点击任意日期可循环切换：<b style="color:var(--acc)">休息 → 全天假 → 半天假(上午) → 半天假(下午)</b>，日薪与到手额立即重算。<br>
+      <b style="color:var(--ok)">绿色</b>＝上班　<b style="color:var(--warn)">橙色</b>＝法定假日里公司要求上班（全薪平摊）　<b style="color:var(--bad)">红色</b>＝请假或法定假。
+    </div>
+    <div class="calhead" id="calHead"></div>
+    <div class="cal" id="cal"></div>
+    <div class="legend">
+      <span><i class="lg-work"></i>上班</span>
+      <span><i class="lg-ot"></i>休息日加班</span>
+      <span><i class="lg-hw"></i>节假日上班</span>
+      <span><i class="lg-lv"></i>全天假</span>
+      <span><i class="lg-hf"></i>半天假</span>
+      <span><i class="lg-hol"></i>法定假</span>
+      <span><i class="lg-rest"></i>休息</span>
+    </div>
+    <div class="note" id="calNote"></div>
+  </div>
+</div>
+
+<!-- 设置 -->
+<div class="sheet" id="setSheet">
+  <div class="panel">
+    <div class="ph"><h3>设置</h3><button class="x" data-close>✕</button></div>
+
+    <div class="sec-h">薪 资 与 工 时</div>
+    <div style="font-size:11.5px;color:var(--txt3);background:var(--surface);border-left:2px solid var(--acc);padding:10px 12px;border-radius:0 9px 9px 0;margin-bottom:14px;line-height:1.75">
+      当前用的是<b style="color:var(--acc)">默认设置</b>（¥8000 · 09:00-18:00 · 午休 1 小时 · 双休）。<br>
+      改成你的真实情况 → 下面几项填好点「保存并重算」。
+    </div>
+    <div class="field"><label>月薪（元 / 月）</label><input type="number" id="sSalary" step="1" placeholder="7000"></div>
+    <div class="field"><label>每日工时</label>
+      <div class="row3">
+        <input type="time" id="sStart"><input type="time" id="sEnd"><input type="number" id="sHours" step="0.5" placeholder="8">
+      </div>
+      <div class="hint-s">依次为：上班时间 / 下班时间 / 每日计薪小时数</div>
+    </div>
+    <div class="field"><label>午休时段（不计薪）</label>
+      <div class="row2"><input type="time" id="sL1"><input type="time" id="sL2"></div>
+    </div>
+    <div class="field"><label>发薪日</label>
+      <div class="row2"><input type="number" id="sPay" min="1" max="31" placeholder="15"><input type="number" id="sMon" min="1" max="12" placeholder="10"></div>
+      <div class="hint-s">依次为：几号发 / 几月份发的（例如 10 表示 10 月工资在 10 月发）</div>
+    </div>
+
+    <div class="sec-h">休 假 制 度（离职后改这里）</div>
+    <div class="field"><label>周末制度</label>
+      <div class="seg" id="segWork">
+        <button data-v="alt">大小周<small>单双周六轮休</small></button>
+        <button data-v="double">正常双休<small>周末全休</small></button>
+        <button data-v="single">单休<small>只休周日</small></button>
+      </div>
+    </div>
+    <div class="field"><label>大周落在</label>
+      <div class="seg" id="segParity">
+        <button data-v="0">偶数周为大周</button>
+        <button data-v="1">奇数周为大周</button>
+      </div>
+      <div class="hint-s">只影响「大小周」制度。若公司是固定某几个周六上班，请直接在日历里点开改。</div>
+    </div>
+    <div class="field"><label>法定节假日处理</label>
+      <div class="seg" id="segHol">
+        <button data-v="work">放假 + 扣薪日<small>按公司实际</small></button>
+        <button data-v="off">法定假日全休<small>不扣薪</small></button>
+        <button data-v="paid">法定假日全薪<small>照常计薪</small></button>
+      </div>
+      <div class="hint-s" id="holHint"></div>
+    </div>
+
+    <div class="sec-h">显 示</div>
+    <div class="field"><label>小数位数</label>
+      <div class="seg" id="segDec">
+        <button data-v="2">2 位</button><button data-v="3">3 位</button><button data-v="4">4 位</button>
+      </div>
+    </div>
+    <div class="field"><label>周历起始</label>
+      <div class="seg" id="segWeek"><button data-v="0">周一</button><button data-v="1">周日</button></div>
+    </div>
+
+    <div class="sec-h">加 班 规 则</div>
+    <div class="field"><label>休息日加班倍率</label>
+      <div class="seg" id="segOt">
+        <button data-v="1.5">1.5 倍</button>
+        <button data-v="2">2 倍<small>法定最低</small></button>
+        <button data-v="2.5">2.5 倍</button>
+        <button data-v="3">3 倍<small>周末加班</small></button>
+      </div>
+      <div class="hint-s">加班费单独结算，<b style="color:var(--ok)">不摊薄日薪</b>：<br>
+        实发 ＝ 月薪 − 请假扣款 <b>＋ 加班天数 × {工时} × 日薪 ÷ {工时} × 倍率</b></div>
+    <div class="hint-s" id="otHint"></div>
+    </div>
+
+    <div class="sec-h">个 性 化</div>
+    <div class="field"><label>自定义背景图</label>
+      <div class="bg-preview" id="bgPrev"></div>
+      <div class="bg-upload" id="bgUpload">
+        <div class="ic">🖼️</div>
+        <div class="t">点击上传背景图</div>
+        <div class="s">会自动适配当前皮肤，建议用深色图配深色皮肤</div>
+      </div>
+      <input type="file" id="bgFile" accept="image/*" style="display:none">
+      <div style="display:flex;gap:8px">
+        <div class="row2" style="flex:1">
+          <select id="bgDim" style="width:100%;background:var(--surface);border:1px solid var(--stroke);border-radius:10px;padding:10px 12px;color:var(--txt);font-family:var(--f-ui);font-size:13px">
+            <option value="0.35">背景 · 压暗 65%</option>
+            <option value="0.55">背景 · 压暗 45%</option>
+            <option value="0.75">背景 · 压暗 25%</option>
+            <option value="0">背景 · 不压暗</option>
+          </select>
+        </div>
+      </div>
+      <div class="hint-s">压暗是为了让文字看得清</div>
+      <button class="ghost" id="btnBgClear">清除背景图</button>
+    </div>
+
+    <div class="field"><label>调色盘</label>
+      <div class="palette" id="palette"></div>
+      <div class="hint-s">改完立刻生效，并自动保存。点「恢复皮肤默认色」可还原。</div>
+      <button class="ghost" id="btnPalReset">恢复皮肤默认色</button>
+    </div>
+
+    <button class="save" id="btnSave">保存并重算</button>
+    <button class="ghost" id="btnExport">导出配置备份</button>
+    <button class="ghost" id="btnImport">导入配置</button>
+    <button class="danger" id="btnReset">恢复默认设置</button>
+    <button class="danger" id="btnResetAll">清空本机全部数据</button>
+    <div style="display:flex;gap:8px;align-items:center;margin-top:8px">
+      <button class="ghost" id="btnForceUpdate" style="margin:0;flex:1">🔄 强制更新到最新版</button>
+      <span class="hint-s" style="margin:0" id="btnVer">v14</span>
+    </div>
+    <div class="hint-s" style="margin-top:6px">
+      换了手机或改了设置没生效？点上面这个清缓存重载，保证拿到最新代码。
+    </div>
+    <div class="hint-s" style="margin-top:8px">
+      <b style="color:var(--warn)">要把程序借给别人用？</b>点上面的「清空本机全部数据」，对方打开就是干净的出厂状态（月薪 ¥7000、双休、无任何记录）。<br>
+      <span style="opacity:.75">你的数据只存在这台设备上，别人拿到网址也只能看到默认值，看不到你的信息。</span>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- 一键清空确认面板 -->
+<div class="sheet" id="resetSheet">
+  <div class="panel">
+    <div class="ph"><h3 style="color:var(--bad)">清空本设备全部数据</h3><button class="x" data-close>✕</button></div>
+    <div id="resetBox"></div>
+  </div>
+</div>
+
+<!-- 安装引导 -->
+<div class="sheet" id="installSheet">
+  <div class="panel">
+    <div class="ph"><h3>安装到你的设备</h3><button class="x" data-close>✕</button></div>
+    <div class="msgtip" style="font-size:12px;color:var(--txt2);background:var(--surface);border-left:2px solid var(--acc);padding:12px 14px;border-radius:0 10px 10px 0;line-height:1.9;margin-bottom:16px">
+      装成 App 之后：<b style="color:var(--acc)">有独立图标</b>、<b style="color:var(--acc)">独立窗口没有地址栏</b>、<b style="color:var(--acc)">断网也能打开</b>，跟原生软件一样。
+    </div>
+    <div id="installTip" style="font-size:13px;line-height:2.1;color:var(--txt)"></div>
+    <div class="note" style="margin-top:16px">
+      <b style="color:var(--warn)">注意：</b>安装必须在<b>网址</b>上操作（<code style="font-family:var(--f-num)">https://salary-ticker.app.workbuddy.host/</code>）。<br>
+      如果你是直接双击打开本地 <code>index.html</code>，那只是"看网页"，装不了 App。<br>
+      设置数据各设备独立，想同步请用设置里的<b style="color:var(--acc)">导出/导入配置</b>。
+    </div>
+    <div style="display:flex;gap:8px;margin-top:14px">
+      <button class="save" style="flex:2;margin:0" id="btnCopyLink">复制网址</button>
+      <button class="ghost" style="flex:1;margin:0" data-close>知道了</button>
+    </div>
+  </div>
+</div>
+
+<!-- 轮盘选择器 -->
+<div class="wheel-wrap" id="wheel">
+  <div class="wheel">
+    <div class="wheel-hd">
+      <div class="d" id="wDate">—</div>
+      <div class="n" id="wBase">—</div>
+    </div>
+    <div class="wheel-ring" id="wheelRing">
+      <div class="wheel-core" id="wheelCore"><span class="ic">✕</span><span class="t">取消</span></div>
+    </div>
+    <div class="wheel-tip" id="wheelTip">点扇形选择 · 点中心取消 · Esc 关闭</div>
+  </div>
+</div>
+
+<script>
+"use strict";
+
+/* ===== 牛马语录 / 评级 / 消费力 / 八条形象（内联） ===== */
+/* ==========================================================
+   牛马语录库 + 工资评级 + 消费力对照
+   独立模块，可单独测试
+   ========================================================== */
+
+/* —— 语录库 —— */
+/* type: 'work' 上班时 / 'off' 下班时 / 'all' 全天可用 */
+const QUOTES = [
+  // ===== 上班时段（累/崩溃/挣扎） =====
+  {t:'上班哪有不疯的，硬撑罢了，主打一个精神稳定地发疯。', k:'work'},
+  {t:'人在工位坐，魂在天上飞，脑子还赖在被窝里不肯走。', k:'work'},
+  {t:'表面：好的收到。内心：毁灭吧赶紧的，这班谁爱上谁上。', k:'work'},
+  {t:'每天一个离职小念头，持续一整年，行动永远为零。', k:'work'},
+  {t:'工资没多少，怨气能绕公司三圈，当代牛马实锤了。', k:'work'},
+  {t:'打工而已，别太上头，毕竟我只是来赚窝囊费的。', k:'work'},
+  {t:'工位是牢房，上班是上刑，下班才是重获新生。', k:'work'},
+  {t:'钱没挣到，精神先失常，头发倒是掉了一大把。', k:'work'},
+  {t:'上班唯一动力：等下班、等周末、等发薪。其余全是煎熬。', k:'work'},
+  {t:'间歇性想辞职，持续性在苟活，窝囊又无奈的打工人。', k:'work'},
+  {t:'老板画的饼又大又圆，可惜我肠胃不好，消化不了。', k:'work'},
+  {t:'上班的我蔫了吧唧，下班原地复活起飞，判若两人。', k:'work'},
+  {t:'只要我够疯，工作就追不上我，谁也别想CPU我。', k:'work'},
+  {t:'干最累的活，拿最少的钱，主打一个为爱发电。', k:'work'},
+  {t:'建议公司改名：牛马养殖基地，精准又贴切。', k:'work'},
+  {t:'早起上班那一刻，我就不是人了，是打工机器。', k:'work'},
+  {t:'上班不发疯，活着有什么用，情绪稳定全靠演技。', k:'work'},
+  {t:'人在心不在，摸鱼是常态，工作只是顺便应付。', k:'work'},
+  {t:'打工只是游戏，活着才是主业，别太较真。', k:'work'},
+  {t:'只要我躺得够平，内卷就永远卷不到我。', k:'work'},
+  {t:'精神状态美丽，美丽到随时想提桶跑路。', k:'work'},
+  {t:'上班苦上班累，下班快乐又珍贵，谁懂啊。', k:'work'},
+  {t:'表面服从安排，内心偷偷反抗，主打表面功夫。', k:'work'},
+  {t:'用生命换碎银几两，再上下去真要成仙了。', k:'work'},
+  {t:'别烦打工牛马，只想准时下班，拒绝无效加班。', k:'work'},
+  {t:'上班坐牢，下班释放，日复一日重复麻木。', k:'work'},
+  {t:'努力搬砖只为勉强活着，快乐基本不存在。', k:'work'},
+  {t:'打工很苦全靠硬扛，又累又不敢辞真的很痛。', k:'work'},
+  {t:'上这个破班，精神状态领先同龄人二十年。', k:'work'},
+  {t:'打工而已不必内耗，发疯才是打工人的常态。', k:'work'},
+  {t:'早上的我，是沙丁鱼罐头里的哲学思考者。', k:'work'},
+  {t:'通勤不是通勤，是肉身版的神庙逃亡。', k:'work'},
+  {t:'打卡机是我命运的闸机，嘀一声，一天刑期开始。', k:'work'},
+  {t:'别人的早C晚A，我的早C（Coffee）晚A（加班Alert）。', k:'work'},
+  {t:'工位是我的赛博义体，坐下就自动连接痛苦神经。', k:'work'},
+  {t:'椅子加热的不是臀部，是我的怨气。', k:'work'},
+  {t:'屏幕蓝光不是光，是吸取我灵魂的通道。', k:'work'},
+  {t:'办公室的绿植，活得比我滋润有朝气。', k:'work'},
+  {t:'空调冷气吹凉了我对生活的所有热情。', k:'work'},
+  {t:'我的KPI，是领导用脚想出来的天文数字。', k:'work'},
+  {t:'流程，是专门为阻止事情办成而设计的艺术。', k:'work'},
+  {t:'改需求的速度，比我翻脸的速度还快。', k:'work'},
+  {t:'脑细胞阵亡在已读不回的战场上。', k:'work'},
+  {t:'每天的主要工作：转发、收到、确认、拉群、踢皮球。', k:'work'},
+  {t:'开会是一种集体浪费生命的仪式。', k:'work'},
+  {t:'我简单说两句＝半小时起步。', k:'work'},
+  {t:'会议结论：再开个会。', k:'work'},
+  {t:'我在会议上保持微笑，心里在演练武林绝学。', k:'work'},
+  {t:'头脑风暴？不，是脑血栓瞬间。', k:'work'},
+  {t:'同事的甩锅技术，已申请非物质文化遗产。', k:'work'},
+  {t:'职场边界感薄得像层窗户纸，一捅就破。', k:'work'},
+  {t:'总有人把情商低当成性格直率。', k:'work'},
+  {t:'塑料同事情，升温靠奶茶，降温靠抢功。', k:'work'},
+  {t:'我的嘴：好的呢。我的心：你是什么牛马？', k:'work'},
+  {t:'领导的饼又大又圆，就是不给碗。', k:'work'},
+  {t:'他说看好你，意思是好用的牛马就是你。', k:'work'},
+  {t:'承诺像云朵，看着漂亮，一口咬下去是空气。', k:'work'},
+  {t:'领导的口头禅：格局打开。我：钱包打不开了。', k:'work'},
+  {t:'我的时薪，算下来不如广场舞领队。', k:'work'},
+  {t:'薪水是薛定谔的猫，不看就知道不多。', k:'work'},
+  {t:'工资像大姨妈，一个月来一次，一周就没了。', k:'work'},
+  {t:'挣的是精神损失费，付的是医药费。', k:'work'},
+  {t:'上班8小时，长得像一个冰川纪。', k:'work'},
+  {t:'下班前10分钟，慢过等一封中世纪来信。', k:'work'},
+  {t:'假期综合症，本质是对人类为什么要上班的哲学抵触。', k:'work'},
+  {t:'周五的我是快乐小狗，周一的我是丧家之犬。', k:'work'},
+  {t:'精神状态：在大杀四方和大悲咒之间切换。', k:'work'},
+  {t:'发疯，是打工人唯一的理智。', k:'work'},
+  {t:'我的情绪：稳定地发疯，规律地崩溃。', k:'work'},
+  {t:'靠一些粗茶淡饭和电子木鱼，维持着基本的人性。', k:'work'},
+  {t:'我的腰椎间盘，比我更有上进心（突出）。', k:'work'},
+  {t:'体检报告，是我的年度恐怖小说。', k:'work'},
+  {t:'黑眼圈，是我献给工作的黑色勋章。', k:'work'},
+  {t:'头发在枕头上，在梳子上，在地上，就是不在头上。', k:'work'},
+  {t:'从亚健康到深井冰，只差一个加班夜。', k:'work'},
+  {t:'每天想离职800次，第801次因为穷而放弃。', k:'work'},
+  {t:'离职报告在心里写了十万字，表面只说收到。', k:'work'},
+  {t:'幻想中的辞职：摔门而去。现实中的辞职：默默更新简历。', k:'work'},
+  {t:'支撑我上班的，是下个月就离职的幻觉。', k:'work'},
+  {t:'钉钉一响，心脏一紧，阎王点名。', k:'work'},
+  {t:'我的电脑比我先宕机，它是懂解脱的。', k:'work'},
+  {t:'团建：花钱让不熟的人在一起尴尬地玩弱智游戏。', k:'work'},
+  {t:'年会：一群疲惫的人观看另一群疲惫的人表演疲惫。', k:'work'},
+  {t:'口号喊得震天响，落到实处是加油。', k:'work'},
+  {t:'家文化＝把公司当家一样无私奉献，别想真当自家。', k:'work'},
+  {t:'带薪如厕，是打工人神圣不可侵犯的权利。', k:'work'},
+  {t:'厕所隔间，是当代打工人的精神避难所。', k:'work'},
+  {t:'眼神呆滞不是发呆，是在颅内构建新世界。', k:'work'},
+  {t:'高效工作，是为了给摸鱼腾出更多时间。', k:'work'},
+  {t:'摸的不是鱼，是被工作压榨殆尽的灵魂水花。', k:'work'},
+  {t:'我的能力：把一天的工作，均匀地拖到8小时做完。', k:'work'},
+  {t:'理想是理想，现实是时薪二十。', k:'work'},
+  {t:'小时候的梦想是改变世界，现在的梦想是准时下班。', k:'work'},
+  {t:'人生三大错觉：手机在震，有人爱我，明天会更好。', k:'work'},
+  {t:'在工位上进行一些健康的阴暗爬行。', k:'work'},
+  {t:'想把键盘上的Ctrl C/V键，焊在领导的嘴上。', k:'work'},
+  {t:'表面上：好的领导。内心里：吃屎吧你！', k:'work'},
+  {t:'偶尔在茶水间发出不明低吼，同事表示理解。', k:'work'},
+  {t:'精神状态领先医学界100年，医生看了要写论文。', k:'work'},
+  {t:'夏天：空调房里的寒意，和心里的火气一样旺。', k:'work'},
+  {t:'冬天：起床靠勇气，上班靠毅力。', k:'work'},
+  {t:'周一：一周的忌日。周五：一周的诞辰。', k:'work'},
+  {t:'月初：花钱如瀑布。月末：花钱如尿裤，滴滴答答。', k:'work'},
+  {t:'季度末：冲业绩，冲得魂飞魄散。', k:'work'},
+  {t:'我是一块砖，哪里需要哪里搬，搬完还被嫌太方。', k:'work'},
+  {t:'人生是旷野？不，我的旷野是公司到家的两点一线。', k:'work'},
+  {t:'窝囊费已到账，启动防御性窝囊。', k:'work'},
+  {t:'质疑老板，理解老板，成为老板的工具人，超越老板的血压。', k:'work'},
+  {t:'工作嘛，不寒碜，给钱就行。', k:'work'},
+  {t:'骂完公司，还是要打开电脑，这就是成年人的担当。', k:'work'},
+  {t:'想想房贷，想想车贷，脾气瞬间就佛了。', k:'work'},
+  {t:'我不是在打工，我是在为我的退休生活积累素材。', k:'work'},
+  {t:'今天的我忍气吞声，是为了明天（可能）的一鸣惊人。', k:'work'},
+  {t:'上班前：乾坤未定，我们都是黑马。上班后：闹钟一响，我们成了牛马。', k:'work'},
+  {t:'什么是万死不辞？就是被气上万次了，也依然不会辞职。', k:'work'},
+  {t:'长久以来，没有一天是适合上班的——不过发工资的日子除外。', k:'work'},
+  {t:'咖啡很苦，心里堵得慌，只能硬着头皮去挣两千五。', k:'work'},
+  {t:'选错工作之后，每天都是周一，周末也不摆在那了。', k:'work'},
+  {t:'上班就是拆盲盒，每天都有新的崩溃。', k:'work'},
+  {t:'不要慌不要慌，白天搬砖能享受阳光；不要忙不要忙，晚上加班可以观赏月光。', k:'work'},
+  {t:'也不知道啊，每天早上第一句话就是：能不能不上班？之后就静静地走了。', k:'work'},
+  {t:'情绪稳定？没有这样的事情，每天都是烦死了，但还要笑着干活。', k:'work'},
+  {t:'当老板画饼的时候，我装作很饿的样子；分发饼的时候，我手里却拿着一个。', k:'work'},
+  {t:'从开始干活到现在，我的工作态度一落千丈，但工资没有任何变化。', k:'work'},
+  {t:'全世界这么大，我想去走走；钱包这么小，哪里也去不了。', k:'work'},
+  {t:'上班如上坟，灵魂已离线。', k:'work'},
+  {t:'干最累的活，拿最少的钱，主打开一个为爱发电。', k:'work'},
+  {t:'摸鱼中，勿扰。', k:'work'},
+  {t:'情绪稳定个鬼，我脑壳有毛病。', k:'work'},
+  {t:'下床做牛马了。', k:'work'},
+  {t:'光顾着上班，忘记上吊了。', k:'work'},
+  {t:'到点了。', k:'work'},
+  {t:'以前我是牛马，现在我是牛马中的反骨仔——活要干，但绝不惯着。', k:'work'},
+  {t:'面试说接受加班，入职后我连好的都回得慢吞吞。', k:'work'},
+  {t:'嘴上说着收到，心里想着你猜我收没收到。', k:'work'},
+  {t:'同事都在卷，我假装电脑死机，实际刷手机笑得发抖。', k:'work'},
+  {t:'工位上的绿萝都蔫了，只有我的反骨还在茁壮成长。', k:'work'},
+  {t:'谁说摸鱼不努力？我每天准时带薪做梦，这叫职业规划。', k:'work'},
+  {t:'上班带的不是饭，是续命的精神离职外卖单。', k:'work'},
+  {t:'工资到账秒转余额宝，主打一个钱只是在我这过个路。', k:'work'},
+  {t:'今天没和老板吵架，我真棒，奖励自己多摸十分钟鱼。', k:'work'},
+  {t:'咱就是说，班可以不上，但反骨不能不支棱起来。', k:'work'},
+  {t:'领导问我为啥不积极，我说我在攒大招准备一鸣惊人。', k:'work'},
+  {t:'整个公司只有我的椅子知道，我的屁股有多不情愿坐下。', k:'work'},
+
+  // ===== 下班时段（沙雕恭喜/解脱） =====
+  {t:'恭喜！今日份班味已清除，可以开始做人啦！', k:'off'},
+  {t:'下班快乐！这一天，你成功战胜了牛马命运，功德无量。', k:'off'},
+  {t:'叮咚～您的自由已到账，请查收。', k:'off'},
+  {t:'恭喜解锁成就：今日份工资到手！', k:'off'},
+  {t:'你！出！狱！了！', k:'off'},
+  {t:'恭喜完成今日KPI，虽然可能是个P。', k:'off'},
+  {t:'下班了！这一刻，工位失去了一位优秀员工，你获得了一整晚的自由。', k:'off'},
+  {t:'今日宜下班，忌加班。', k:'off'},
+  {t:'恭喜您已成功熬过今日份精神损耗，剩余时间全部属于您。', k:'off'},
+  {t:'下班吧骚年，人生得意须尽欢，莫使金樽空对月。', k:'off'},
+  {t:'下班铃响，战鼓擂，你的牛马生涯暂告一段落。', k:'off'},
+  {t:'恭喜您今日准时下班，该行为已超越全国 78% 的打工人。', k:'off'},
+  {t:'打工人的下班仪式：从僵直到瘫软只需 3 秒。', k:'off'},
+  {t:'恭喜，你又成功忍受了自己一整天，这很了不起。', k:'off'},
+  {t:'今日班味已随下班烟消云散，明日将再次聚拢。', k:'off'},
+  {t:'下班快乐！你的钱包在哭，但你的灵魂在笑。', k:'off'},
+  {t:'恭祝你已从「社畜」进化为「游魂」，恭喜！', k:'off'},
+  {t:'下班了，让自己彻底瘫一会儿，这是硬道理。', k:'off'},
+  {t:'今日份班味已洗掉 87%，剩余部分随夜风飘散。', k:'off'},
+  {t:'恭喜您完成今日班业，明日将会有新的班业等着您。', k:'off'},
+  {t:'下班快乐，打工人们！明天继续当牛马，今晚先当个人。', k:'off'},
+  {t:'叮咚，您的下班券已到账，请立即使用，逾期作废。', k:'off'},
+  {t:'恭喜！你今天的努力（划水）已经被成功记录在案。', k:'off'},
+  {t:'下班快乐！你的工位今日不营业，你的沙发已准备就绪。', k:'off'},
+  {t:'恭喜您熬过了又一天，牛马精神+1。', k:'off'},
+  {t:'下班了，带着你破碎的心和空荡的卡回家吧。', k:'off'},
+  {t:'下班快乐！今日事今日毕，明天的事明天再崩溃。', k:'off'},
+  {t:'恭喜！你的精神离职申请已自动延至下班时分。', k:'off'},
+  {t:'恭喜您按时下班，今日份的班味正在为您清除。', k:'off'},
+  {t:'下班快乐！明天的你会更讨厌上班，但今天你赢了。', k:'off'},
+  {t:'今日下班，您的灵魂已抵达工位以外的地方。', k:'off'},
+  {t:'恭喜您完成今日份「牛马」，请签收。', k:'off'},
+  {t:'下班快乐！这是你今天应得的自由，请勿辜负。', k:'off'},
+  {t:'工位已闭眼，你下班了。', k:'off'},
+  {t:'恭喜！今日份打工指标已达成，剩余时间归你支配。', k:'off'},
+  {t:'下班快乐，愿你今晚不做梦，不加班，不想起明天。', k:'off'},
+  {t:'恭喜您从打工人光荣退休（有效期 12 小时）。', k:'off'},
+  {t:'下班快乐！你的精神牛马已归栏，请尽情享受自由。', k:'off'},
+
+  // ===== 全天通用 =====
+  {t:'打工只是游戏，活着才是主业。', k:'all'},
+  {t:'上班就是为了下班，活着就是为了不死。', k:'all'},
+  {t:'我的梦想：对领导说世界那么大我想去看看，然后看他脸色大变。', k:'all'},
+  {t:'打工人的尽头不是升职，而是精神离职。', k:'all'},
+  {t:'牛马最快乐的三个时候是：下班、拿工资、老板不在。', k:'all'},
+  {t:'你是我这一生做过最长期的项目。', k:'all'},
+  {t:'不管怎样，我没能发财的根由是每天都去上班了。', k:'all'},
+  {t:'精神状态良好，暂不具备离职条件。', k:'all'},
+  {t:'我正在经历一个技术性调整（发疯）。', k:'all'},
+  {t:'每天一个离职念头，一年以后还是同一个念头。', k:'all'},
+  {t:'工位三件套：水杯、耳机、我。', k:'all'},
+  {t:'我不是在摸鱼，我是在进行办公技能的深度训练。', k:'all'},
+  {t:'领导说这是成长，我说我这是成熟。', k:'all'},
+  {t:'上班的意义在于，让我看清了自己不适合上班。', k:'all'},
+  {t:'今日事今日毕，明日泪明日流。', k:'all'},
+  {t:'打工是不可能打工的，这辈子不可能打工的。', k:'all'},
+  {t:'每天早上醒来，都想问问自己：为什么还没辞职。', k:'all'},
+  {t:'牛马也有梦想，牛马的梦想是下班。', k:'all'},
+  {t:'我有一个不成熟的梦想：不上班还有钱。', k:'all'},
+  {t:'写代码不如写遗书，写遗书不如去上班。', k:'work'},
+  {t:'上班这件事，从入职那刻起就在贬值。', k:'work'},
+  {t:'所谓成长，就是把「不想干」憋成了「干吧」。', k:'all'},
+  {t:'打工就是一场修行，修的不成正果，只修出腱鞘炎。', k:'all'},
+  {t:'今天也是元气的牛马一只呢。', k:'all'},
+  {t:'牛马宣言：活可以干，班必须上，饼坚决不吃。', k:'all'},
+];
+
+/* —— 随机取语录 —— */
+let _lastQuote = '';
+function randomQuote(kind){
+  const pool = QUOTES.filter(q => kind ? q.k===kind || q.k==='all' : true);
+  let q, guard=0;
+  do { q = pool[Math.floor(Math.random()*pool.length)]; guard++; }
+  while(q.t === _lastQuote && guard < 12 && pool.length > 1);
+  _lastQuote = q.t;
+  return q.t;
+}
+function randomWorkQuote(){ return randomQuote('work'); }
+function randomOffQuote(){  return randomQuote('off');  }
+
+/* ==========================================================
+   ★★ 牛马语录库 v2 —— 拆成四类，严格按时段 / 日历状态取用
+   1) Q_START   上班语录：每天上班后 2 小时内
+   2) Q_NORMAL  正常语录：上班满 2 小时后 → 当天下班前
+   3) Q_OFF     下班语录：当天下班后 → 次日上班前
+   4) Q_HOL     放假语录：休息日 / 法定节假日 / 工作日请假时段
+   ★ 与彩蛋语录库完全独立，互不干扰
+   ★ 状态不持久化：每次刷新 / 重开自动重置
+   ========================================================== */
+const Q_START = [
+  '闹钟响了又响，你把它当成了背景音乐。',
+  '坐下的第一件事，是把灵魂从床上捞回来。',
+  '早安，咖啡因正在加载中，请稍候。',
+  '工位还没坐热，KPI 已经来敲门了。',
+  '刚睁眼就上班，这班上得很有仪式感。',
+  '你不是一个想法，你是一台刚重启的电脑。',
+  '今天的班味很新鲜，还带着起床气的余温。',
+  '八点打卡的心情，像被通知要交作业的差生。',
+  '老板说早，我说你先把表情管理一下。',
+  '今天也是被生活按着头打卡的一天。',
+  '眼睛睁开了，灵魂还在爬楼梯。',
+  '刚到工位，先给自己续一杯苦命水。',
+  '早起打卡是上班，迟到扣钱是命。',
+  '今天的第一个决定：先叹一口气。',
+  '早起两小时，攒了一肚子没处说的委屈。',
+  '工位冷，人更冷，唯有工牌是热的。',
+  '脑子还是昨天的，人已经是今早的了。',
+  '第一小时最贵，第二小时最困。',
+  '刚从被窝里爬出来，就被安排了一整天。',
+  '上班前两小时，是最贵的两小时，也是最困的两小时。',
+  '别问我在哪，我在工位上飘着。',
+  '今天的班，是从被窝里跋山涉水来上的。',
+  '打卡那一刻，我听见自由在关门。',
+  '你说早安，我说救命。',
+  '闹钟是我的闹钟，班是大家的班，我只负责出现。',
+];
+
+const Q_NORMAL = [
+  '上班的意义在于，让我看清了自己不适合上班。',
+  '所谓成长，就是把「不想干」憋成了「干吧」。',
+  '打工就是一场修行，修的不成正果，只修出腱鞘炎。',
+  '今天也是元气的牛马一只呢。',
+  '牛马宣言：活可以干，班必须上，饼坚决不吃。',
+  '我不是在摸鱼，我是在进行办公技能的深度训练。',
+  '工位三件套：水杯、耳机、我。',
+  '精神状态良好，暂不具备离职条件。',
+  '我正在经历一个技术性调整（发疯）。',
+  '每天一个离职念头，一年以后还是同一个念头。',
+  '牛马也有梦想，牛马的梦想是下班。',
+  '我有一个不成熟的梦想：不上班还有钱。',
+  '上班这件事，从入职那刻起就在贬值。',
+  '每天早上醒来，都想问问自己：为什么还没辞职。',
+  '生活给了我一个工位，我给了它全部的怨气。',
+  '领导说这是成长，我说是磨损。',
+  '一天八小时，我用两小时贩卖命，六小时贩卖情绪。',
+  '工位是我的第二个家，虽然没有WiFi。',
+  '开会十分钟，消耗我一上午。',
+  '我不是懒，我是把力气省下来等下班。',
+  '工资不多，但班是真的长。',
+  '今天的活还没干完，人已经开始软了。',
+  '打工人的一天：清醒两小时，模糊六小时。',
+  '业绩不会突然变好，但腰会突然变疼。',
+  '上班三个小时，体重没变，心态变了。',
+  '同事问我还好吗，我说还活着。',
+  '既来之则安之，反正也下不去。',
+  '今天干得不多，但我想得多，心累。',
+  '老板的饼很大，我的胃很小。',
+  '干最多的活，拿最少的笑。',
+  '工位已经坐下，人还在路上。',
+  '一上午过去，才把上午活干完。',
+  '咖啡第三杯，苦到第五年。',
+  '人生建议：把期待调到最低，把工位调到最高。',
+  '牛马的本领是：被压着还能笑。',
+  '别人看我在敲键盘，只有我知道我在敲桌子。',
+  '一天下来，正事没干多少，班味倒是攒了满身。',
+  '我上班的样子，像不像一条被安排得明明白白的鱼。',
+  '最难熬的不是活多，是不知道为什么要干。',
+  '摸鱼的最高境界，是让老板觉得你在思考。',
+  '工资到账那三秒，是我一周里最体面的三秒。',
+  '工位、键盘、咖啡，是我的三大件。',
+  '人和人之间最大的差距，是下班时间。',
+  '白天做人，晚上做鬼，反正周末当两天神仙。',
+  '我不是不喜欢工作，我是不喜欢现在。',
+  '今天也是认真营业的一天，虽然我很不想营业。',
+  '一天不干正事，一天就浑身难受——其实是没钱。',
+  '努力不一定成功，但不努力一定更难过。',
+  '把活干完，把话说少，把气憋住。',
+];
+
+const Q_OFF = [
+  '恭喜！今日份班味已清除，可以开始做人啦！',
+  '下班快乐！这一天，你成功战胜了牛马命运，功德无量。',
+  '叮咚～您的自由已到账，请查收。',
+  '恭喜解锁成就：今日份工资到手！',
+  '你！出！狱！了！',
+  '下班了！这一刻，工位失去了一位优秀员工，你获得了一整晚的自由。',
+  '今日宜下班，忌加班。',
+  '恭喜您已成功熬过今日份精神损耗，剩余时间全部属于您。',
+  '下班吧骚年，人生得意须尽欢，莫使金樽空对月。',
+  '下班铃响，战鼓擂，你的牛马生涯暂告一段落。',
+  '恭喜您今日准时下班，该行为已超越全国 78% 的打工人。',
+  '打工人的下班仪式：从僵直到瘫软只需 3 秒。',
+  '恭喜，你又成功忍受了自己一整天，这很了不起。',
+  '今日班味已随下班烟消云散，明日将再次聚拢。',
+  '下班快乐！你的钱包在哭，但你的灵魂在笑。',
+  '恭祝你已从「社畜」进化为「游魂」，恭喜！',
+  '下班了，让自己彻底瘫一会儿，这是硬道理。',
+  '今日份班味已洗掉 87%，剩余部分随夜风飘散。',
+  '恭喜您完成今日班业，明日将会有新的班业等着您。',
+  '下班快乐，打工人们！明天继续当牛马，今晚先当个人。',
+  '叮咚，您的下班券已到账，请立即使用，逾期作废。',
+  '恭喜！你今天的努力（划水）已经被成功记录在案。',
+  '下班快乐！你的工位今日不营业，你的沙发已准备就绪。',
+  '恭喜您熬过了又一天，牛马精神+1。',
+  '下班了，带着你破碎的心和空荡的卡回家吧。',
+  '下班快乐！今日事今日毕，明天的事明天再崩溃。',
+  '恭喜！你的精神离职申请已自动延至下班时分。',
+  '恭喜您按时下班，今日份的班味正在为您清除。',
+  '下班快乐！明天的你会更讨厌上班，但今天你赢了。',
+  '今日下班，您的灵魂已抵达工位以外的地方。',
+  '恭喜您完成今日份「牛马」，请签收。',
+  '下班快乐！这是你今天应得的自由，请勿辜负。',
+  '工位已闭眼，你下班了。',
+  '恭喜！今日份打工指标已达成，剩余时间归你支配。',
+  '下班快乐，愿你今晚不做梦，不加班，不想起明天。',
+  '恭喜您从打工人光荣退休（有效期 12 小时）。',
+  '下班快乐！你的精神牛马已归栏，请尽情享受自由。',
+  '关机，把烦恼留给明天的自己处理。',
+  '电脑一合，恩怨两清。',
+  '工作群：已静音。快乐：已加载 100%。',
+  '从「您好，请问……」切换到「喂，晚上去哪？」',
+  '暂时告别「牛马」身份，重启「人类之光」模式。',
+  '今晚不做牛马，今晚只做一个人。',
+];
+
+const Q_HOL = [
+  '卸下牛马的鞍，周末是我的草原。',
+  '周一到周五：吃的是草挤的是方案；周末：吃火锅挤的是快乐！',
+  '紧急切换物种：周内是社畜，周末是树懒。',
+  '本周 KPI：把电量耗在被窝、外卖和追剧里（进度 99%）。',
+  '停止反刍领导的饼，本牛马申请光合作用 48 小时。',
+  '本日宜：把工牌藏进抽屉，把灵魂放归山海。',
+  '周末不摸鱼，枉为打工人。此刻的我：翻身农奴把歌唱。',
+  '打工人假期真相：周一到周五工位是战场，周六到周日沙发是我的王座。',
+  '放假后生物钟？不存在的。睡到中午起，早饭午饭合并报表。',
+  '床以外的地方都是远方，手够不到的地方都是他乡。',
+  '假期已读不回权，今日正式行使。',
+  '放假前：世界那么大我想去看看；放假后：卧室→客厅→厨房循环。',
+  '放假了，今天做的第一件事是滚回床上，然后滚回梦里。',
+  '假期消费观：火锅烧烤小龙虾，今天我是人均二百的小富翁。',
+  '假期隐藏任务：把上周缺的觉补回来，睡眠赤字必须清零。',
+  '从工位奴隶到自由散漫，无缝切换。',
+  '假期终极目标：放假是人间清醒的暂停键。',
+  '一打开朋友圈就看到我了吧，怪有缘的，明天的班就你替我上了。',
+  '周末在书店看到本书叫《解决人生 50% 难题》，于是买了两个。',
+  '谈恋爱吗？就这两天，周末我没事。',
+  '我要睡烂这张床。一个人周末想联系你的人，会想尽一切办法联系上你，比如你老板。',
+  '我可真是败家子，上亿的资产，一醒来就没了。',
+  '上辈子作恶多端，这辈子周末上班——但今天不是。',
+  '一周有 1 天在打工，6 天在等周末。今天，终于等到了。',
+  '周末的正确打开方式：把烦恼调成静音，把快乐开到最大音量。',
+  '放假啦！终于可以跟那个讨厌的早餐店老板说声再见。',
+  '今天放假，我决定给花坛增添色彩，结果撒了一地辣椒粉，全小区以为我进了军。',
+  '同事讲笑话时表情呆滞，不是听不懂，是根本不想听。',
+  '放假期间也要保持工作状态？那我定个目标：每天努力翻个身。',
+  '周一恐惧症晚期，周日焦虑症提前发作——珍惜最后一天。',
+  '休息日的最大项目：把手机静音睡到自然醒。',
+  '请假第一天：不是休息，是带薪心虚。',
+  '请假中：工资少一半，班味清零，划算。',
+  '工作群已静音，老板已拉黑（暂时），人生已重启。',
+  '放假的意义就是：今天不想几点起，就几点起。',
+  '阳光、沙发、零食，缺一个都算假期不完整。',
+  '假期不是放假，是把没做完的事留到明天。',
+  '不上班的日子，我终于想起了自己原本的样子。',
+  '连续加班后的一天假，够我续命到下周。',
+  '法定节假日快乐，不是因为放假多，是因为终于不扣钱了。',
+];
+
+/* —— 工资评级 —— */
+const RANKS = [
+  { min:0,     lv:0, key:'dead',  name:'尘封',   cls:'r0',  icon:'🪦',
+    desc:'这工资，连盒饭都买不起了。建议躺着，先缓缓。' },
+  { min:2000,  lv:1, key:'bad',   name:'拉完了', cls:'r1',  icon:'🫠',
+    desc:'吃土 vibes 拉满，购物车里的东西先默默清空吧。' },
+  { min:3500,  lv:2, key:'poor',  name:'苟着',   cls:'r2',  icon:'🥴',
+    desc:'勉强活着，奶茶从两杯降到一杯，这就是生活。' },
+  { min:5000,  lv:3, key:'mid',   name:'还行',   cls:'r3',  icon:'🙂',
+    desc:'够吃够喝，偶尔还能加个鸡腿，稳中向好。' },
+  { min:6500,  lv:4, key:'good',  name:'不错',   cls:'r4',  icon:'😎',
+    desc:'有点小钱了，外卖可以不看价格点，下班能打个车。' },
+  { min:8000,  lv:5, key:'great', name:'挺爽',   cls:'r5',  icon:'🤩',
+    desc:'小富生活开始，购物车清空速度明显加快。' },
+  { min:10000, lv:6, key:'nice',  name:'舒适',   cls:'r6',  icon:'🤑',
+    desc:'有点小钱但不敢声张，毕竟还要继续上班。' },
+  { min:13000, lv:7, key:'rich',  name:'富裕',   cls:'r7',  icon:'💰',
+    desc:'存款开始有了自己的声音，买东西先看折扣不看价格。' },
+  { min:18000, lv:8, key:'boss',  name:'夯爆了', cls:'r8',  icon:'🔥',
+    desc:'这薪水，牛马只是你的副业。老板都得管你叫大哥。' },
+  { min:26000, lv:9, key:'king',  name:'降维打击', cls:'r9', icon:'👑',
+    desc:'打工只是你调剂生活的方式，你才是资本本身。' },
+  { min:40000, lv:10,key:'legend',name:'打工的神',cls:'r10',icon:'⭐',
+    desc:'你已不需要打工，是打工需要你。' },
+];
+function getRank(pay){
+  const p = Math.max(0, Math.round(pay||0));
+  let r = RANKS[0];
+  for(const x of RANKS) if(p >= x.min) r = x;
+  return r;
+}
+/** 按「本月可拿满的总额」等比缩放评级区间 —— 让 0~7000 也能铺满 11 级 */
+function getRankByRatio(earned, full){
+  const total = Math.max(1, full||1);
+  const ratio = Math.max(0, Math.min(1, earned/total));   // 0~1
+  // 把 ratio 映射到 RANKS 的下标区间（跳过第0级"尘封"作为起点）
+  const lv = Math.min(RANKS.length-1, Math.max(1, Math.round(ratio*(RANKS.length-2))+1));
+  return RANKS[lv];
+}
+
+/* —— 消费力对照（能买什么）——
+   注意：这里用的是「实时已赚金额」，不是月薪预测。
+   商品价格全部压缩到「一个月工资」量级，保证任何收入都能看到对应的东西。 */
+const SHOPPING=[
+  // 已赚 0-300：只够喝水
+  {min:0,    items:[['一瓶矿泉水',3],['一个馒头',4],['辣条一包',6],['公交一趟',2],['共享单车',1.5],['速溶咖啡',8],['烤肠一根',5]]},
+  // 300-700
+  {min:300,  items:[['一杯奶茶',18],['一份炒饭',22],['两桶泡面',24],['一瓶洗发水',39],['一包纸巾',16],['电影票一张',45]]},
+  // 700-1500
+  {min:700,  items:[['一双帆布鞋',129],['蓝牙耳机',199],['一箱牛奶',60],['水果一箱',80],['Switch 卡带',220]]},
+  // 1500-3000
+  {min:1500, items:[['机械键盘',399],['运动鞋',599],['iPad 入门',1599],['_switch 卡带',350]]},
+  // 3000-6000
+  {min:3000, items:[['iPhone 16',5999],['显示器',1299],['人体工学椅',899],['电动牙刷',399]]},
+  // 6000-12000
+  {min:6000, items:[['iPhone 16 Pro',7999],['MacBook Air',7999],['降噪耳机',1299],['显示器 4K',2999]]},
+  // 12000-25000
+  {min:12000,items:[['iPhone 16 Pro Max',9999],['MacBook Pro',16999],['相机入门',5999],['PS5',3600]]},
+  // 25000+
+  {min:25000,items:[['MacBook Pro Max',28999],['相机旗舰',18000],['说走就走的旅行',20000]]},
+];
+/** 实时购物力：按已赚金额给出「现在买得起什么」 */
+function getShoppingLive(earned){
+  const p=Math.max(0,Math.round(earned||0));
+  let tier=SHOPPING[0];
+  for(const s of SHOPPING) if(p>=s.min) tier=s;
+  return tier.items.map(([name,price])=>({name,price,can:p>=price}));
+}
+function shoppingLineLive(earned){
+  const p=Math.max(0,Math.round(earned||0));
+  if(p<1) return '还没开始赚，今天的第一桶金正在路上…（去把时间轴拖一拖？）';
+  const items=getShoppingLive(p);
+  const can=items.filter(i=>i.can);
+  const tier=SHOPPING.find(s=>p>=s.min)||SHOPPING[0];
+  // 本档位里挑出「买得起但最贵」的那件，作为当前成就
+  const best=can[can.length-1];
+  const head=`已赚 <b>¥${p.toLocaleString()}</b>`;
+  if(!best) return `${head}，目前连${items[0].name}（¥${items[0].price}）都还差一点点`;
+  return `${head}，已经够买 <b>${best.name}</b>（¥${best.price}）了！`;
+}
+
+/* ==========================================================
+   八条（呆猫八条）SVG 形象 —— 趴着的猫
+   银渐层毛色：浅灰蓝身体 + 白肚 + 大眼睛 + 吐舌头
+   纯 SVG，可跟随皮肤换色
+   ========================================================== */
+
+/** 趴着的八条（简化版，用于角落装饰） */
+function cat8SVG(size=64, mood='normal'){
+  const eyes = {
+    normal: `<circle cx="26" cy="34" r="3.4" fill="#2b2b33"/><circle cx="27.2" cy="32.8" r="1.2" fill="#fff"/><circle cx="46" cy="34" r="3.4" fill="#2b2b33"/><circle cx="47.2" cy="32.8" r="1.2" fill="#fff"/>`,
+    happy:  `<path d="M22 35 q4-5 8 0" stroke="#2b2b33" stroke-width="2.4" fill="none" stroke-linecap="round"/><path d="M42 35 q4-5 8 0" stroke="#2b2b33" stroke-width="2.4" fill="none" stroke-linecap="round"/>`,
+    dead:   `<path d="M22 32 l8 6 M30 32 l-8 6" stroke="#2b2b33" stroke-width="2.2" stroke-linecap="round"/><path d="M42 32 l8 6 M50 32 l-8 6" stroke="#2b2b33" stroke-width="2.2" stroke-linecap="round"/>`,
+    wink:   `<circle cx="26" cy="34" r="3.4" fill="#2b2b33"/><circle cx="27.2" cy="32.8" r="1.2" fill="#fff"/><path d="M42 35 q4-5 8 0" stroke="#2b2b33" stroke-width="2.4" fill="none" stroke-linecap="round"/>`,
+  }[mood] || '';
+
+  const tongue = mood==='happy'||mood==='normal'
+    ? `<path d="M32 46 q3 6 0 8 q-3-2 0-8" fill="#ff8fa8"/>` : '';
+
+  return `<svg viewBox="0 0 64 64" width="${size}" height="${size}" aria-label="八条">
+    <!-- 身体（趴着） -->
+    <ellipse cx="32" cy="44" rx="24" ry="15" fill="#cfd6de"/>
+    <!-- 尾巴 -->
+    <path d="M55 46 q10 2 8-7 q-1-5-6-4" stroke="#b8c1cc" stroke-width="7" fill="none" stroke-linecap="round"/>
+    <!-- 头 -->
+    <circle cx="36" cy="30" r="17" fill="#e2e7ec"/>
+    <!-- 耳朵 -->
+    <path d="M22 19 l-2-11 l11 5z" fill="#d5dbe2"/>
+    <path d="M50 19 l2-11 l-11 5z" fill="#d5dbe2"/>
+    <path d="M23 19 l-1-7 l7 3z" fill="#ffb8c8" opacity=".75"/>
+    <path d="M49 19 l1-7 l-7 3z" fill="#ffb8c8" opacity=".75"/>
+    <!-- 头顶条纹（虎斑） -->
+    <path d="M30 14 l2 6 M36 13 v6 M42 14 l-2 6" stroke="#aab3bd" stroke-width="2" stroke-linecap="round" opacity=".8"/>
+    <!-- 白肚 -->
+    <ellipse cx="32" cy="50" rx="15" ry="8" fill="#f4f6f8" opacity=".9"/>
+    <!-- 眼睛 -->
+    ${eyes}
+    <!-- 鼻子 -->
+    <path d="M32 40 h5 l-2.5 3z" fill="#ff8fa8"/>
+    <!-- 嘴 -->
+    <path d="M32 43 q-3 3 -6 0 M32 43 q3 3 6 0" stroke="#2b2b33" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+    ${tongue}
+    <!-- 胡须 -->
+    <path d="M14 38 h-9 M15 42 l-9 2 M50 38 h9 M49 42 l9 2" stroke="#c3cbd4" stroke-width="1.2" stroke-linecap="round"/>
+    <!-- 前爪 -->
+    <ellipse cx="22" cy="52" rx="7" ry="4" fill="#f0f3f6"/>
+    <ellipse cx="42" cy="52" rx="7" ry="4" fill="#f0f3f6"/>
+    <path d="M19 52 v3 M22 52 v3 M25 52 v3 M39 52 v3 M42 52 v3 M45 52 v3" stroke="#c3cbd4" stroke-width="1" stroke-linecap="round"/>
+  </svg>`;
+}
+
+/** 八条的小表情（当装饰元素，趴在卡片角落） */
+function cat8Peek(size=40, mood='normal', opacity=.9){
+  return `<span class="cat8-peek" style="opacity:${opacity}">${cat8SVG(size,mood)}</span>`;
+}
+
+/* ==========================================================
+   一、2026 年法定节假日（国务院办公厅 国办发明电〔2025〕7号）
+   ========================================================== */
+const HOLIDAYS=[
+  {n:'元旦',  s:'2026-01-01',e:'2026-01-03'},
+  {n:'春节',  s:'2026-02-15',e:'2026-02-23'},
+  {n:'清明',  s:'2026-04-04',e:'2026-04-06'},
+  {n:'劳动节',s:'2026-05-01',e:'2026-05-05'},
+  {n:'端午',  s:'2026-06-19',e:'2026-06-21'},
+  {n:'中秋',  s:'2026-09-25',e:'2026-09-27'},
+  {n:'国庆',  s:'2026-10-01',e:'2026-10-07'},
+];
+/* 法定调休上班日 */
+const MAKEUP=['2026-01-04','2026-02-14','2026-02-28','2026-05-09','2026-09-20','2026-10-10'];
+/* 公司在法定假日里额外要求上班的日子（全薪平摊）——由holidayWorkTail 规则推导，
+   这里只需记录例外：默认每个假日区间的最后一天上班 */
+const HOL_WORK_EXCEPTION={};
+
+/* ==========================================================
+   二、默认配置
+   ========================================================== */
+const DEF={
+  salary:8000, start:'09:00', end:'18:00', hours:8,
+  lunch1:'12:00', lunch2:'13:00',
+  payDay:15, payMon:10,
+  workMode:'double',     // alt=大小周 double=正常双休 single=单休（默认双休，最通用）
+  parity:0,            // 0=偶数周大周 1=奇数周大周
+  holMode:'work',      // work=放假+扣薪日 off=全休 paid=全薪
+  decimals:3, firstDay:1,
+  otRate:2,             // 休息日加班倍率（劳动法规定不低于 2 倍）
+  theme:'keyboard',
+  viewM:null,          // 当前查看月份（1-12），null=跟随今天
+  override:{},          // ★出厂不含任何请假记录（避免分享时带上我的数据）
+  palette:{},          // 自定义配色 { '--acc':'#xxx' }
+  bgImg:'',            // 自定义背景图（dataURL）
+  bgDim:0.35           // 背景压暗程度
+};
+const KEY='salary_ticker_v2';
+let CFG=load();
+function load(){
+    // 测试钩子：Node 测试脚本会在执行前设置 __CFG_OVERRIDE 来固定配置，
+    // 让测试断言不依赖出厂默认值（改默认值不会让旧测试崩）
+    let base;
+    try{
+      const raw=localStorage.getItem(KEY);
+      if(!raw) base=JSON.parse(JSON.stringify(DEF));
+      else base=Object.assign(JSON.parse(JSON.stringify(DEF)), JSON.parse(raw));
+    }catch(e){ base=JSON.parse(JSON.stringify(DEF)); }
+    if(typeof __CFG_OVERRIDE!=='undefined' && __CFG_OVERRIDE){
+      base=Object.assign(base, JSON.parse(JSON.stringify(__CFG_OVERRIDE)));
+    }
+    return base;
+  }
+function save(){ try{ localStorage.setItem(KEY,JSON.stringify(CFG)); }catch(e){} }
+
+/* ==========================================================
+   三、日期工具
+   ========================================================== */
+const MS_D=86400000;
+const pad=n=>String(n).padStart(2,'0');
+function ymd(d){ return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
+function parseYMD(s){ const [y,m,d]=s.split('-').map(Number); return new Date(y,m-1,d); }
+function daysInMonth(y,m){ return new Date(Date.UTC(y,m,0)).getUTCDate(); }
+function isoWeek(dt){
+  const d=new Date(Date.UTC(dt.getFullYear(),dt.getMonth(),dt.getDate()));
+  const day=d.getUTCDay()||7;
+  d.setUTCDate(d.getUTCDate()+4-day);
+  const ys=new Date(Date.UTC(d.getUTCFullYear(),0,1));
+  return Math.ceil((((d-ys)/MS_D)+1)/7);
+}
+function minOf(t){ const[a,b]=t.split(':').map(Number); return a*60+b; }
+function hhmm(m){ m=((m%1440)+1440)%1440; return pad(Math.floor(m/60))+':'+pad(Math.floor(m%60)); }
+
+/* ==========================================================
+   四、出勤判定
+
+   设计要点：把「这天本来是什么性质」和「你实际怎么请的假」拆成两个维度，
+   否则请了半天假，法定假日的属性就会被覆盖掉，日历和分母都会算错。
+
+   day.st  0=休息 1=上班 2=请假(全天)
+   day.hw  是否属于「节假日里公司要求上班」(全薪平摊的那天)
+   day.hv  是否属于法定假日范围
+   ========================================================== */
+function holidayOf(key){
+  for(const h of HOLIDAYS) if(key>=h.s&&key<=h.e) return h;
+  return null;
+}
+function isHolidayTail(key){
+  // 该 key 是否是它所属法定假期的最后一天
+  const h=holidayOf(key);
+  if(!h) return false;
+  if(HOL_WORK_EXCEPTION[key]!==undefined) return !!HOL_WORK_EXCEPTION[key];
+  return key===h.e;
+}
+/** 基础状态（不含用户覆盖）。holMode 只影响法定假日怎么算 */
+function baseStatus(key){
+  const h=holidayOf(key);
+  if(h){
+    if(CFG.holMode==='off') return 0;                        // 法定假全休
+    if(CFG.holMode==='paid') return 1;                       // 法定假全薪＝普通工作日
+    return isHolidayTail(key) ? 1 : 0;                       // work模式：仅最后一天上班(全薪)
+  }
+  if(MAKEUP.includes(key)) return 1;                         // 法定调休上班
+  const dow=parseYMD(key).getDay();
+  if(dow===0) return 0;                                      // 周日休
+  if(dow>=1&&dow<=5) return 1;                               // 周一至周五
+  if(dow===6){                                               // 周六
+    if(CFG.workMode==='double') return 0;
+    if(CFG.workMode==='single') return 1;
+    return (isoWeek(parseYMD(key))%2)===CFG.parity ? 1 : 0;   // 大小周
+  }
+  return 0;
+}
+/** 实际状态（含用户覆盖）。override 值：lv=请假 / lv1=半天假(上午) / lv2=半天假(下午) / off=休息 / work=上班(含休息日加班) */
+function statusOf(key){
+  const ov=CFG.override[key];
+  if(ov==='lv') return 2;
+  if(ov==='lv1'||ov==='lv2') return 3;                       // 半天假
+  if(ov==='off') return 0;
+  if(ov==='work') return 1;                                   // 上班（休息日设为上班即加班）
+  return baseStatus(key);
+}
+/** 这天本来是不是「节假日里公司要求上班」的那天（全薪平摊） */
+function isHolidayWork(key){
+  if(CFG.holMode!=='work') return false;
+  return isHolidayTail(key);
+}
+/** 是否属于法定假日范围 */
+function inHoliday(key){ return !!holidayOf(key); }
+/** 请假折算成多少天（用于扣款） */
+function leaveDays(st){ return st===2?1:(st===3?0.5:0); }
+/** 是否计入应出勤分母（用于算日薪）—— 半天假也计入，相当于按半天工作日平摊 */
+function isDue(key,st){
+  // ★休息日加班：不算进应出勤分母（加班费单独结算，不摊薄日薪）
+  if(st===1){
+    if(CFG.override[key]==='work' && baseStatus(key)===0) return false;
+    return true;
+  }
+  if(st===2) return true;      // 全天请假：分母不变，从实发扣一天日薪
+  if(st===3) return true;      // 半天请假：同样计入分母，扣半日薪
+  return false;
+}
+/** 这天是否属于「休息日加班」 */
+function isOTDay(key){
+  return CFG.override[key]==='work' && statusOf(key)===1 && baseStatus(key)===0;
+}
+/** 是否产生收入 */
+function earns(st){ return st===1; }
+
+/* ==========================================================
+   五、月度核心计算
+   ========================================================== */
+function monthCalc(y,m,now){
+  const WS=minOf(CFG.start), WE=minOf(CFG.end), LS=minOf(CFG.lunch1), LE=minOf(CFG.lunch2);
+  const LUNCH=Math.max(0,LE-LS);
+  const NET=Math.max(0,(WE-WS)-LUNCH);
+  const HRS=CFG.hours>0?CFG.hours:8;
+
+  const total=daysInMonth(y,m);
+  const tk=now?ymd(now):'';
+  const cur=now?(now.getHours()*60+now.getMinutes()+now.getSeconds()/60+now.getMilliseconds()/60000):0;
+  const nowYm=now?(now.getFullYear()+'-'+pad(now.getMonth()+1)):'';
+  const thisYm=y+'-'+pad(m);
+
+  const keys=[], list=[];
+  let due=0, lvFull=0, lvHalf=0, work=0, holWork=0, rest=0, holRest=0, otDays=0;
+  for(let i=1;i<=total;i++){
+    const k=`${y}-${pad(m)}-${pad(i)}`;
+    const st=statusOf(k);
+    const hw=isHolidayWork(k);       // 法定假日里公司要求上班的那天
+    const hv=inHoliday(k);           // 法定假日范围内
+    // ★加班判定：本来是休息日，却被手动设成上班
+    const isOT = st===1 && baseStatus(k)===0;
+    if(isDue(k,st)) due++;
+    if(st===2) lvFull++;
+    if(st===3) lvHalf++;
+    if(st===1) work++;
+    if(hw&&st===1) holWork++;
+    if(isOT) otDays++;
+    if(st===0){ rest++; if(hv) holRest++; }
+    keys.push(k);
+    list.push({k,i,st,hw,hv,isOT,isToday:k===tk,isPast:!!now&&k<tk});
+  }
+  const rate = due>0 ? CFG.salary/due : 0;
+  const hourRate = HRS>0 ? rate/HRS : 0;
+  const minRate = hourRate/60, secRate = minRate/60;
+  // 半天请假折算
+  const leaveDaysF = lvFull + lvHalf*0.5;
+  const deduct = leaveDaysF*rate;
+  // ★加班费：休息日加班按「平日时薪 × 倍率」另算，不摊薄日薪、不计入分母
+  const otHourRate = hourRate*(CFG.otRate||2);
+  const otPay = otDays*HRS*otHourRate;
+
+  // 今日
+  let tWorked=0,tEarned=0,tState='',tRemain=0,tStatus=0,tRemainH=0,tCap=0;
+  if(now){
+    tStatus=statusOf(tk);
+    tCap = tStatus===3 ? NET/2 : NET;      // 半天假最多赚半日
+    if(tStatus===0){
+      tState = inHoliday(tk) ? '今天法定假 · 安心放假' : '今天休息 · 安心摸鱼';
+    }
+    else if(tStatus===2) tState='今天请假 · 不计工资';
+    else if(tStatus===3){
+      const half = CFG.override[tk]==='lv2' ? '下午' : '上午';
+      tState=`今天请半天假（${half}）· 最多赚半日薪`;
+      if(cur>WS && cur<WE){
+        const full = (cur<=WS)?0:((cur<LS)?cur-WS:(cur<LE?LS-WS:(cur<WE?(LS-WS)+(cur-LE):NET)));
+        tWorked = Math.min(full, NET/2);
+        tEarned = Math.min(rate/2, tWorked/60*hourRate);
+      }
+      tRemain=Math.max(0,rate/2-tEarned);
+      tRemainH=Math.max(0,NET/2-tWorked)/60;
+    }
+    else{
+      const isOToday = statusOf(tk)===1 && baseStatus(tk)===0;   // 今天是休息日加班
+      // 先按正常逻辑算工作时长
+      if(cur<=WS) tState = isOToday ? `休息日加班 · ¥${otHourRate.toFixed(2)}/h` : '还没上班 · 数字待启动';
+      else if(cur<LS){ tWorked=cur-WS; tState='上班中 · <b>正在涨</b>'; }
+      else if(cur<LE){ tWorked=LS-WS; tState='午休中 · <b>暂停</b>'; }
+      else if(cur<LE+60){ tWorked=(LS-WS)+(cur-LE); tState='已复工 · <b>正在涨</b>'; }
+      else if(cur<WE){ tWorked=(LS-WS)+(cur-LE); tState='正在上班 · <b>正在涨</b>'; }
+      else { tWorked=NET; tState='今日已收工 · 数字锁定'; }
+      if(isOToday) tState = `休息日加班中 · ¥${otHourRate.toFixed(2)}/h`;
+      // ★加班日按加班时薪算，不受日薪上限约束
+      if(isOToday){
+        tEarned = tWorked/60*otHourRate;
+        tRemain = Math.max(0, HRS*otHourRate - tEarned);
+      }else{
+        tEarned=Math.min(rate, tWorked/60*hourRate);
+        tRemain=Math.max(0,rate-tEarned);
+      }
+      tRemainH=Math.max(0,NET-tWorked)/60;
+    }
+  }
+  const tIsOT = now ? (statusOf(tk)===1 && baseStatus(tk)===0) : false;
+
+  // 本月累计
+  // 注意方向：查看的月份(nowYm) 若「小于」今天所在月，说明这是回看过去的月份，应全额计入
+  const viewingPast   = now && thisYm < nowYm;
+  const viewingFuture = now && thisYm > nowYm;
+  let earned=0, workedDays=0, futureWorkDays=0;
+  for(const it of list){
+    if(!earns(it.st)) continue;
+    // ★加班日的收入是「加班费全额」，不是日薪（因为它不摊薄分母）
+    const pay = it.isOT ? HRS*otHourRate : rate;
+    if(!now){ earned+=pay; workedDays++; continue; }
+    if(viewingPast){ earned+=pay; workedDays++; continue; }     // 回看过去：该月已过完
+    if(viewingFuture){ futureWorkDays++; continue; }           // 查看未来：一分未赚
+    // 当前月：按今天在月中的位置切分
+    if(it.k<tk){ earned+=pay; workedDays++; }
+    else if(it.k===tk){ earned+= it.isOT ? Math.min(pay, tEarned*CFG.otRate*(CFG.otRate||2)) : tEarned; workedDays++; }
+    else futureWorkDays++;
+  }
+
+  // 今日状态只在查看「当前月」时有意义
+  const isCurrentMonth = !now || nowYm===thisYm;
+  if(!isCurrentMonth){
+    tEarned=0; tWorked=0; tRemain=0; tRemainH=0; tState='';
+  }
+
+  const finalPay=CFG.salary - deduct + otPay;   // 预计到手（月薪 − 请假扣款 + 加班费）
+  const future=Math.max(0, finalPay - earned);
+
+  return {
+    y,m,total,keys,list,rate,hourRate,minRate,secRate,
+    due,rest,holRest,lvFull,lvHalf,leaveDaysF,work,holWork,
+    otDays,otPay,otHourRate,
+    NET,WS,WE,LS,LE,LUNCH,hr:HRS,
+    cur,tk,nowYm,
+    tStatus,tIsOT,tWorked,tEarned,tRemain,tRemainH,tState,
+    earned,workedDays,future,futureWorkDays,
+    finalPay, deduct, isCurrent: nowYm===thisYm
+  };
+}
+
+/* ==========================================================
+   六、渲染
+   ========================================================== */
+const $=id=>document.getElementById(id);
+const MON=['','1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+let lastMS=-1, lastMSY=-1, toastT=null;
+
+function money(v,dec){
+  const n=Math.max(0,v||0);
+  return dec>=3 ? n.toFixed(dec)
+    : n.toLocaleString('zh-CN',{minimumFractionDigits:dec,maximumFractionDigits:dec});
+}
+function viewMonth(){ return CFG.viewM || (new Date().getMonth()+1); }
+function viewYear(){ return new Date().getFullYear(); }
+function setViewM(m){ CFG.viewM=m; save(); }
+
+function toast(html){
+  const t=$('toast'); t.innerHTML=html; t.classList.add('show');
+  clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('show'),2000);
+}
+
+/* —— 皮肤 —— */
+const SKINS=[
+  {id:'keyboard', n:'键盘科技', c:'#00e5ff', ic:'⌨️', meta:'#050a0f'},
+  {id:'cosmos',   n:'宇宙星球', c:'#a78bfa', ic:'🪐', meta:'#05060f'},
+  {id:'cat8',     n:'呆猫八条', c:'#ff9f43', ic:'🐱', meta:'#fff6ec'},
+  {id:'aurora',   n:'极光经典', c:'#38bdf8', ic:'✨', meta:'#0a0e17'},
+  {id:'matrix',   n:'极客终端', c:'#00ff9c', ic:'💚', meta:'#020604'},
+  {id:'sunset',   n:'日落暖橙', c:'#fb923c', ic:'🌇', meta:'#170f1c'},
+];
+const THEME_BG={keyboard:'#050a0f',cosmos:'#05060f',cat8:'#fff6ec',aurora:'#0a0e17',matrix:'#020604',sunset:'#170f1c'};
+/** 皮肤默认色（用于调色盘回滚） */
+const SKIN_DEFAULT_COLORS={
+  keyboard:{'--acc':'#00e5ff','--acc2':'#00ff88','--ok':'#00ff88','--warn':'#ffb02e','--bad':'#ff4d6d','--bg':'#050a0f','--surface':'#0b1319','--txt':'#d7f5ff','--txt2':'#6ea3b5'},
+  cosmos:{'--acc':'#a78bfa','--acc2':'#60a5fa','--ok':'#4ade80','--warn':'#fbbf24','--bad':'#fb7185','--bg':'#05060f','--surface':'#0c0f1e','--txt':'#eaefff','--txt2':'#9aa3d0'},
+  cat8:{'--acc':'#ff9f43','--acc2':'#ff6b9d','--ok':'#52b788','--warn':'#ffb703','--bad':'#ef476f','--bg':'#fff6ec','--surface':'#ffffff','--txt':'#6b4423','--txt2':'#a8765a'},
+  aurora:{'--acc':'#38bdf8','--acc2':'#8b5cf6','--ok':'#22c55e','--warn':'#fbbf24','--bad':'#fb7185','--bg':'#080b12','--surface':'#121822','--txt':'#eef3fa','--txt2':'#93a3bd'},
+  matrix:{'--acc':'#00ff9c','--acc2':'#00cc7a','--ok':'#00ff9c','--warn':'#ffd166','--bad':'#ff5c5c','--bg':'#020604','--surface':'#081c12','--txt':'#c8ffd8','--txt2':'#5fe89a'},
+  sunset:{'--acc':'#fb923c','--acc2':'#e879f9','--ok':'#4ade80','--warn':'#fbbf24','--bad':'#f87171','--bg':'#170f1c','--surface':'#211829','--txt':'#fdf4ec','--txt2':'#c4a99a'},
+};
+const PALETTE_KEYS=[
+  {k:'--acc', n:'主色（强调/进度）'},{k:'--acc2', n:'辅助色'},
+  {k:'--ok', n:'上班/正向'},{k:'--warn', n:'午休/加班'},{k:'--bad', n:'请假/负向'},
+  {k:'--bg', n:'背景底色'},{k:'--surface', n:'卡片底色'},
+  {k:'--txt', n:'主要文字'},{k:'--txt2', n:'次要文字'},
+];
+/** 合法主题白名单 —— 防止旧配置指向已删除的皮肤导致样式全失效 */
+const VALID_THEMES=['keyboard','cosmos','cat8','aurora','matrix','sunset','sakura'];
+/** 应用主题：内置皮肤 + 用户自定义配色 + 背景图 */
+function applyTheme(){
+  // 兜底：未知主题一律回落到 aurora，并写回配置
+  if(!VALID_THEMES.includes(CFG.theme)){
+    CFG.theme='keyboard';
+    try{ save(); }catch(e){}
+  }
+  document.documentElement.dataset.theme=CFG.theme;
+  // ★ 原生控件（时间选择器下拉）跟随主题明暗，否则深色主题下看不见
+  document.documentElement.style.colorScheme = (CFG.theme==='cat8') ? 'light' : 'dark';
+  const meta=document.querySelector('meta[name=theme-color]');
+  if(meta) meta.content=THEME_BG[CFG.theme]||'#0a0e17';
+  // 清掉旧的自定义变量
+  PALETTE_KEYS.forEach(p=>document.documentElement.style.removeProperty(p.k));
+  // 应用新配色
+  const pal=CFG.palette||{};
+  PALETTE_KEYS.forEach(p=>{ if(pal[p.k]) document.documentElement.style.setProperty(p.k,pal[p.k]); });
+  // 背景图
+  const body=document.body;
+  if(CFG.bgImg){
+    const dim=CFG.bgDim??0.35;
+    body.classList.add('has-bgimg');
+    body.style.setProperty('--user-bg',
+      dim>0 ? `linear-gradient(rgba(0,0,0,${dim}),rgba(0,0,0,${dim})),url("${CFG.bgImg}")`
+            : `url("${CFG.bgImg}")`);
+  } else {
+    body.classList.remove('has-bgimg');
+    body.style.removeProperty('--user-bg');
+  }
+}
+function renderSkins(){
+  $('skins').innerHTML=SKINS.map(s=>
+    `<div class="skin ${CFG.theme===s.id?'on':''}" data-s="${s.id}" title="${s.n}">
+       <i style="background:${s.c};color:${s.c}"></i>${s.ic} ${s.n}
+     </div>`).join('');
+  $('skins').querySelectorAll('.skin').forEach(el=>{
+    el.addEventListener('click',()=>{
+      CFG.theme=el.dataset.s;
+      CFG.palette={};                 // 换皮肤时清掉旧皮肤的自定义色
+      save(); applyTheme(); renderSkins(); renderPalette(); injectDecor();
+    });
+  });
+}
+/** 调色盘 */
+function renderPalette(){
+  const box=$('palette'); if(!box) return;
+  const defs=SKIN_DEFAULT_COLORS[CFG.theme]||{};
+  box.innerHTML=PALETTE_KEYS.map(p=>{
+    const cur=(CFG.palette&&CFG.palette[p.k])||defs[p.k]||'#888888';
+    return `<label class="pal-item">
+      <input type="color" value="${cur}" data-pk="${p.k}">
+      <span class="pn">${p.n}<br><span class="pv">${cur}</span></span>
+    </label>`;
+  }).join('');
+  box.querySelectorAll('input[type=color]').forEach(inp=>{
+    inp.addEventListener('input',()=>{
+      const k=inp.dataset.pk;
+      CFG.palette=CFG.palette||{};
+      CFG.palette[k]=inp.value;
+      document.documentElement.style.setProperty(k,inp.value);
+      inp.parentElement.querySelector('.pv').textContent=inp.value;
+      save();
+    });
+  });
+}
+$('btnPalReset').addEventListener('click',()=>{
+  CFG.palette={}; save(); applyTheme(); renderPalette();
+  toast('已恢复当前皮肤的默认配色');
+});
+
+/* ==========================================================
+   六、语录 / 评级 / 消费力
+   ========================================================== */
+let _quoteText='', _quoteKind='', _quoteTimer=0;
+/* ==========================================================
+   ★ 当前语录状态机（v2）
+   返回 'hol' | 'start' | 'normal' | 'off'
+   - hol    放假语录：日历状态为休息 / 法定放假 / 工作日请假时段
+   - start  上班语录：上班后 2 小时内
+   - normal 正常语录：上班满 2 小时后 → 当天下班前
+   - off    下班语录：当天下班后 → 次日上班前
+   ★ 与日历状态强绑定（含大小周轮换、调休、法定假日）
+   ========================================================== */
+function getQuoteMode(now){
+  now = now || new Date();
+  const key = ymd(now);
+  const st  = statusOf(key);          // 0休息 1上班 2全天假 3半天假
+  const h   = now.getHours()+now.getMinutes()/60;
+  const ws  = minOf(CFG.start)/60, we = minOf(CFG.end)/60;
+
+  // —— 放假：休息日 / 法定假日 / 工作日请假 ——
+  if(st===0) return 'hol';           // 休息日（含大小周轮换结果、调休假日）
+  if(st===2) return 'hol';           // 全天请假
+  if(st===3){                          // 半天假：只在该半天里放假
+    const ov = CFG.override[key];
+    const ls = minOf(CFG.lunch1)/60, le = minOf(CFG.lunch2)/60;
+    if(ov==='lv1' && h < ls) return 'hol';   // 上午请假
+    if(ov==='lv2' && h >= le) return 'hol';  // 下午请假
+  }
+  // —— 工作日：按时段切分 ——
+  if(h < ws) return 'off';            // 今天还没上班（昨天下班语录延续）
+  if(h < ws+2) return 'start';        // 上班后 2 小时
+  if(h < we) return 'normal';         // 上班满 2 小时后 → 下班前
+  return 'off';                       // 下班后 → 次日上班前
+}
+const QUOTE_MODE_META = {
+  hol:   { pool:()=>Q_HOL,    badge:'放 假 语 录 · 假 期 免 罚',  cls:'hol' },
+  start: { pool:()=>Q_START,  badge:'上 班 语 录 · 开 始 折 磨',  cls:'start' },
+  normal:{ pool:()=>Q_NORMAL, badge:'牛 马 语 录 · 上 班 中',    cls:'normal' },
+  off:   { pool:()=>Q_OFF,    badge:'下 班 语 录 · 自 由 时 间',  cls:'off' },
+};
+/** 从指定池里取一句，尽量不重复上一句 */
+function pickFrom(pool){
+  let q, guard=0;
+  do{ q = pool[Math.floor(Math.random()*pool.length)]; guard++; }
+  while(q===_lastQuote && guard<14 && pool.length>1);
+  _lastQuote = q;
+  return q;
+}
+/** 兼容旧调用点 */
+function currentQuoteKind(){ return getQuoteMode(); }
+/* ==========================================================
+   彩蛋语录库（拖动时间轴触发）
+   ★ 与普通语录库完全独立，互不干扰
+   ★ 状态不持久化：每次刷新/重开自动重置
+   ========================================================== */
+const EGG_QUOTES = {
+  // —— 按拖动次数（从高到低匹配，多的优先）——
+  count: [
+    { min:10, s:'玩够了没有？' },
+    { min:7,  s:'别摸鱼了，你的工作要被你摸没了' },
+    { min:5,  s:'别闹了，再玩就玩坏了' },
+    { min:2,  s:'啊 你得逞了 人' },
+    { min:1,  s:'你有毛病？手乱动就去治治。' },
+  ],
+  // —— 拖完按总时长判定 ——
+  total: [
+    { min:481, s:'牛！你就是先天打工圣体！' },   // >8h = 480 分钟
+    { min:0,   s:'想下班想疯了？' },            // <8h
+  ],
+};
+
+let eggCount=0;              // 三条进度条统一计数
+let eggTimer=null;           // 2 分钟重置
+let eggActive=false;         // 当前是否显示彩蛋语录
+let eggText='';              // 当前彩蛋文案
+let eggOverLock=false;       // 超时彩蛋的冷却锁（5 分钟内不重复）
+
+function eggReset(){
+  eggCount=0; eggActive=false; eggText=''; eggOverLock=false;
+  clearTimeout(eggTimer); eggTimer=null;
+}
+function eggArmReset(){
+  clearTimeout(eggTimer);
+  eggTimer=setTimeout(()=>{ eggCount=0; }, 2*60*1000);   // 每两分钟重置
+}
+/** 拖动开始 */
+function eggDragStart(){ eggArmReset(); }
+/** 计一次拖动（来回拖不松手只算一次） */
+function eggCountDrag(){
+  eggCount++;
+  eggArmReset();
+}
+/** 拖动过程中实时显示 */
+function eggDragMove(){
+  const r = EGG_QUOTES.count.find(x=>eggCount>=x.min);
+  if(!r) return;
+  eggActive=true; eggText=r.s;
+  renderQuote(eggText, '彩 蛋 · 拖 动 计 数 '+eggCount+' 次');
+}
+/** 松手：按总时长判定 */
+function eggDragEnd(){
+  const total=tlTotalWork();
+  const r = EGG_QUOTES.total.find(x=>total>=x.min);
+  eggActive=true; eggText=r.s;
+  const hours=(total/60).toFixed(2);
+  // 顺便看是否有某段已经超时（时间过了但条没到头）
+  const now=curNow();
+  const over=[0,1,2].filter(i=>now>tlSeg[i].e);
+  const overTip = over.length ? `　⚠ ${over.length} 段已超时` : '';
+  const label = total>=480
+    ? '彩 蛋 · 净 工 时 '+hours+' h · 超 8 小时'+overTip
+    : '彩 蛋 · 净 工 时 '+hours+' h · 不 足 8 小时'+overTip;
+  renderQuote(eggText, label);
+}
+/** ★ 超时彩蛋：任何一段实际工作时间超过设置值时触发 */
+function eggCheckOver(){
+  if(eggActive) return;                 // 彩蛋模式下不打断
+  const now=curNow();
+  const over=[0,1,2].filter(i=>i!==1 && now>tlSeg[i].e+1);
+  if(!over.length) return;
+  const total=tlTotalWork();
+  eggActive=true;
+  eggText = EGG_QUOTES.total.find(x=>total>=x.min).s;
+  const names=over.map(i=>['上午','午休','下午'][i]).join('、');
+  renderQuote(eggText, '彩 蛋 · '+names+'已超时 · 净工时 '+(total/60).toFixed(2)+' h');
+}
+/** 统一渲染语录 */
+function renderQuote(text, badge){
+  const el=$('quoteText');
+  if(!el) return;
+  el.classList.add('fade');
+  setTimeout(()=>{
+    el.textContent=text;
+    $('quoteBadge').textContent=badge;
+    el.classList.remove('fade');
+    // 彩蛋态高亮 + 提示可点击切回
+    const box=el.closest('.quotebox');
+    if(box) box.classList.toggle('egg', eggActive);
+    el.classList.toggle('clickable', true);
+  },180);
+}
+
+/** 语录状态机统一入口：按当前 mode 取对应库 */
+function pickQuote(force){
+  // ★彩蛋模式下点"换一句"→ 立刻切回普通语录库
+  if(eggActive && !force){ eggActive=false; eggText=''; }
+  if(eggActive){
+    renderQuote(eggText, '彩 蛋 · 拖 动 计 数 '+eggCount+' 次');
+    return;
+  }
+  const mode  = QUOTE_MODE_META[force] ? force : getQuoteMode();
+  const meta  = QUOTE_MODE_META[mode];
+  const text  = pickFrom(meta.pool());
+  const el=$('quoteText');
+  if(!el) return;
+  el.classList.add('fade');
+  setTimeout(()=>{
+    el.innerHTML=text.replace(/(上班|下班|工资|老板|摸鱼|打工|请假|离职|加班|早C晚A|工位|放假|周末)/g,'<b>$1</b>');
+    $('quoteBadge').textContent=meta.badge;
+    el.classList.remove('fade');
+  },160);
+  _quoteText=text; _quoteKind=mode;
+  return mode;
+}
+/* —— 自动循环轮播：每 45 秒换一句；状态切换时立即换 —— */
+const QUOTE_ROTATE_MS = 45*1000;
+let _quoteRotateTimer=null;
+function restartQuoteRotate(){
+  clearInterval(_quoteRotateTimer);
+  _quoteRotateTimer=setInterval(()=>{
+    if(eggActive) return;              // 彩蛋态不打断
+    const el=$('quoteText');
+    if(!el || !el.isConnected) return;
+    pickQuote();
+  }, QUOTE_ROTATE_MS);
+}
+$('btnQuote').addEventListener('click',()=>{
+  $('btnQuote').classList.add('spin');
+  setTimeout(()=>$('btnQuote').classList.remove('spin'),500);
+  // ★彩蛋模式下点击 → 立即切回普通语录库（pickQuote 里处理）
+  pickQuote();
+});
+// 语录文字本身也可点：彩蛋时切回普通；否则在当前状态库内换一句
+$('quoteText').addEventListener('click',()=>{
+  if(eggActive) pickQuote();
+  else { restartQuoteRotate(); pickQuote(); }
+});
+$('quoteText').style.cursor='pointer';
+$('quoteText').title='点击可换一句（彩蛋模式下点击会切回普通语录）';
+/** 八条表情跟随状态 */
+function catMood(status){
+  if(status===0) return 'happy';       // 休息/下班
+  if(status===2||status===3) return 'dead';  // 请假
+  return 'normal';
+}
+/** 皮肤装饰注入：给三套新皮肤加"物理实体"，不只是换色 */
+let decoTheme='';
+function clearDeco(){
+  document.querySelectorAll('.skin-deco').forEach(e=>e.remove());
+  decoTheme='';
+}
+function injectDecor(){
+  // 每帧都会调用，只有主题真的变了才重做
+  if(decoTheme===CFG.theme) return;
+  clearDeco();
+  decoTheme=CFG.theme;
+
+  const cards=()=>document.querySelectorAll('.wrap > .card, .rankcard, .quotebox');
+
+  if(CFG.theme==='cat8'){
+    // 语录卡趴一只（表情跟着状态变，渲染时只更新 innerHTML 不重注入）
+    const q=$('quoteText');
+    if(q){
+      const card=q.closest('.quotebox')||q.closest('.card');
+      if(card){
+        const d=document.createElement('div');
+        d.className='cat8-peek skin-deco';
+        d.id='cat8Quote';
+        d.innerHTML=cat8SVG(48,'happy');
+        card.appendChild(d);
+      }
+    }
+    // 评级卡趴一只
+    const rc=document.querySelector('.rankcard');
+    if(rc){
+      const d=document.createElement('div');
+      d.className='cat8-peek skin-deco';
+      d.id='cat8Rank';
+      d.innerHTML=cat8SVG(54,'normal');
+      rc.appendChild(d);
+    }
+  }
+  else if(CFG.theme==='keyboard'){
+    // ① Hero 卡右上角：迷你键盘
+    const hero=document.querySelector('.hero');
+    if(hero){
+      const d=document.createElement('div');
+      d.className='skin-deco kb-mini';
+      d.innerHTML=[['ESC','F1','F2','F3'],['1','2','3','4'],['5','6','7','8'],['9','0','-','='],['⇧','CTRL','⏎']]
+        .map(row=>`<div class="kb-row">${row.map(k=>`<span>${k}</span>`).join('')}</div>`).join('');
+      hero.appendChild(d);
+    }
+    // ② 每张卡右上角：机械键盘轴心指示灯
+    document.querySelectorAll('.cell').forEach((c,i)=>{
+      if(i%3!==0) return;                      // 每 3 个格子放一个，别太密
+      const d=document.createElement('span');
+      d.className='skin-deco kb-led';
+      c.appendChild(d);
+    });
+    // ③ 语录卡右下角：代码雨条纹
+    const q=$('quoteText');
+    if(q){
+      const card=q.closest('.quotebox');
+      if(card){
+        const d=document.createElement('div');
+        d.className='skin-deco kb-rain';
+        d.innerHTML=Array.from({length:10},(_,i)=>
+          `<span style="animation-delay:${(i%5)*0.18}s;height:${18+(i*7)%42}%"></span>`).join('');
+        card.appendChild(d);
+      }
+    }
+  }
+  else if(CFG.theme==='cosmos'){
+    // ① Hero 卡：星环 + 行星
+    const hero=document.querySelector('.hero');
+    if(hero){
+      const d=document.createElement('div');
+      d.className='skin-deco cosmos-hero';
+      d.innerHTML=
+        `<span class="orbit o1"><i class="planet p1"></i></span>`+
+        `<span class="orbit o2"><i class="planet p2"></i></span>`+
+        `<span class="orbit o3"><i class="planet p3"></i></span>`+
+        `<span class="spark s1"></span><span class="spark s2"></span><span class="spark s3"></span><span class="spark s4"></span>`;
+      hero.appendChild(d);
+    }
+    // ② 数据格右上角：小行星点
+    document.querySelectorAll('.rate').forEach((r,i)=>{
+      const d=document.createElement('span');
+      d.className='skin-deco cosmos-dot';
+      r.appendChild(d);
+    });
+    // ③ 语录卡：漂浮陨石
+    const q=$('quoteText');
+    if(q){
+      const card=q.closest('.quotebox');
+      if(card){
+        const d=document.createElement('div');
+        d.className='skin-deco cosmos-meteor';
+        d.innerHTML=`<span class="m1"></span><span class="m2"></span><span class="m3"></span>`;
+        card.appendChild(d);
+      }
+    }
+  }
+}
+/** 八条表情随状态更新（只换内容，不重注入） */
+function updateCat8(mood){
+  const q=document.getElementById('cat8Quote');
+  if(q) q.innerHTML=cat8SVG(48, mood==='dead'?'dead':'happy');
+  const r=document.getElementById('cat8Rank');
+  if(r) r.innerHTML=cat8SVG(54, mood);
+}
+/** 购物力维度：today=今日已赚 / month=本月累计 */
+let shopDim='today';
+function renderRank(d){
+  // —— 维度1：今日已赚，基准=今天挣满能拿多少 ——
+  const tEarn=d.tEarnedLive||0, tFull=Math.max(1,d.tRateFull||1);
+  const rt=getRankByRatio(tEarn,tFull);
+  $('rkTEmoji').textContent=rt.icon;
+  $('rkTName').textContent=rt.name+'　LV.'+rt.lv;
+  $('rkTDesc').textContent=rt.desc;
+  $('rkTBar').style.width=Math.max(0,Math.min(100,tEarn/tFull*100)).toFixed(1)+'%';
+  $('rkTNum').textContent=`${money(tEarn,2)} / ${money(tFull,2)}`;
+
+  // —— 维度2：本月累计，基准=本月预计到手 ——
+  const mEarn=d.mEarned||0, mFull=Math.max(1,d.mFinal||1);
+  const rm=getRankByRatio(mEarn,mFull);
+  $('rkMEmoji').textContent=rm.icon;
+  $('rkMName').textContent=rm.name+'　LV.'+rm.lv;
+  $('rkMDesc').textContent=rm.desc;
+  $('rkMBar').style.width=Math.max(0,Math.min(100,mEarn/mFull*100)).toFixed(1)+'%';
+  $('rkMNum').textContent=`${money(mEarn,2)} / ${money(mFull,2)}`;
+
+  // —— 购物力跟随所选维度 ——
+  const base = shopDim==='today' ? tEarn : mEarn;
+  $('shopLine').innerHTML = (shopDim==='today'?'今日已赚 ':'本月累计 ') + shoppingLineLive(base);
+  const items=getShoppingLive(base);
+  $('shopItems').innerHTML=items.map(i=>
+    `<span class="shop-item ${i.can?'can':''}">${i.can?'✅':'🔒'} ${i.name} <b>¥${i.price}</b></span>`).join('');
+}
+$('shopSeg').querySelectorAll('button').forEach(b=>{
+  b.addEventListener('click',()=>{
+    shopDim=b.dataset.v;
+    $('shopSeg').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));
+    renderRank({ tEarnedLive: CUR_T.tEarnedLive, tRateFull: CUR_T.tRateFull,
+                 mEarned: CUR_M.mEarned, mFinal: CUR_M.mFinal });
+  });
+});
+let CUR_T={tEarnedLive:0,tRateFull:1}, CUR_M={mEarned:0,mFinal:1};
+
+/* ==========================================================
+   七、可拖动时间轴（三段独立，尾端可拖到任意位置）
+   ========================================================== */
+/* 每段独立存 {s,e}：s 固定起点，e 可拖。
+   ★★ 关键设计：手柄位置 = 该段时长 / TL_SPAN_MAX（轨道满格 = 12 小时）
+      渲染和拖动用同一个 pct，所以"拖到哪就停在哪"，不会自己跳。
+      轨道起点就是该段的开始时刻，因此左边不会有黑条。 */
+let tlSeg=[
+  {s:570, e:720},     // 0=上午上班
+  {s:720, e:780},     // 1=午休
+  {s:780, e:1110}     // 2=下午上班
+];
+let tlInit=false, tlDragging=false;
+const TL_MIN=15, TL_MAXM=1439;
+const TL_SPAN_MAX=720;                // 轨道满格代表 12 小时
+/** 该段占轨道的百分比（按用户设置的时长） */
+function tlPct(seg){ return Math.max(0,Math.min(1,(seg.e-seg.s)/TL_SPAN_MAX)); }
+/** ★ 实时百分比 = max(时间已过的比例, 手动设置的比例)
+    效果：上午过完自动满格、午休结束自动满格；
+         之后用户还能继续往后拖，条保持满、下方时间数字继续增长。 */
+function tlRealPct(seg, now){
+  const setPct=tlPct(seg);
+  const dur=Math.max(1, seg.e-seg.s);
+  const timePct=Math.max(0, Math.min(1,(now-seg.s)/dur));
+  return Math.max(setPct, timePct);
+}
+
+function initDragTL(){
+  const map=[
+    {i:0, trk:'trkA', knob:'knbA'},
+    {i:1, trk:'trkB', knob:'knbB'},
+    {i:2, trk:'trkC', knob:'knbC'},
+  ];
+  map.forEach(cfg=>{
+    const trk=$(cfg.trk), knob=$(cfg.knob), bar=trk.closest('.segbar');
+    let dragging=false, moved=false;
+
+    // ★ 位置 → 时长：直接把鼠标位置换算成"这段有多长"，与渲染完全对称
+    // ★ 不再限制"不侵入下一段" —— 三段互相独立，都可以一直拖到满格(12h)
+    const apply=e=>{
+      const r=trk.getBoundingClientRect();
+      const x=(e.touches?e.touches[0].clientX:e.clientX);
+      const f=Math.max(0,Math.min(1,(x-r.left)/Math.max(1,r.width)));
+      const seg=tlSeg[cfg.i];
+      // 唯一约束：不超过 12 小时（轨道满格）
+      const dur=Math.max(TL_MIN, Math.min(TL_SPAN_MAX, Math.round(f*TL_SPAN_MAX)));
+      seg.e=seg.s+dur;
+      renderDragTL();
+    };
+    const onDown=e=>{
+      e.preventDefault(); e.stopPropagation();
+      dragging=true; moved=false; tlDragging=true;
+      bar.classList.add('dragging');
+      apply(e);
+      eggDragStart();
+    };
+    const onMove=e=>{
+      if(!dragging) return;
+      e.preventDefault();
+      if(!moved){ moved=true; eggCountDrag(); }   // 来回拖不松手只算一次
+      apply(e);
+      eggDragMove();
+    };
+    const onUp=()=>{
+      if(!dragging) return;
+      dragging=false; tlDragging=false;
+      bar.classList.remove('dragging');
+      if(moved) eggDragEnd();
+    };
+    trk.addEventListener('mousedown',onDown);
+    trk.addEventListener('touchstart',onDown,{passive:false});
+    window.addEventListener('mousemove',onMove);
+    window.addEventListener('touchmove',onMove,{passive:false});
+    window.addEventListener('mouseup',onUp);
+    window.addEventListener('touchend',onUp);
+  });
+
+  // —— 分段复位：每段单独恢复到「设置」里的真实时间 ——
+  function resetSegs(){
+    return {
+      a: {s:minOf(CFG.start),  e:minOf(CFG.lunch1)},
+      b: {s:minOf(CFG.lunch1), e:minOf(CFG.lunch2)},
+      c: {s:minOf(CFG.lunch2), e:minOf(CFG.end)},
+    };
+  }
+  const DEF_SEGS=resetSegs();
+
+  // 上班复位：上午段回到「上班 → 午休开始」
+  $('btnResetUp').addEventListener('click',()=>{
+    try{
+      const d=resetSegs();
+      tlSeg[0]={s:d.a.s, e:d.a.e};
+      tlSeg[1]={s:d.b.s, e:d.b.e};      // 午休起点跟着对齐
+      renderDragTL();
+      toast(`上班 ${hhmm(d.a.s)} → 午休 ${hhmm(d.a.e)}`);
+    }catch(e){ tlSeg=null; toast('上班复位出错，已重置'); }
+  });
+  // 午休复位：午休段回到「午休开始 → 午休结束」
+  $('btnResetNoon').addEventListener('click',()=>{
+    try{
+      const d=resetSegs();
+      tlSeg[1]={s:d.b.s, e:d.b.e};
+      tlSeg[0]={s:tlSeg[0].s, e:d.b.s};  // 上午终点对齐午休起点
+      tlSeg[2]={s:d.b.e, e:tlSeg[2].e};  // 下午起点对齐午休终点
+      renderDragTL();
+      toast(`午休 ${hhmm(d.b.s)} → ${hhmm(d.b.e)}`);
+    }catch(e){ tlSeg=null; toast('午休复位出错，已重置'); }
+  });
+  // 下班复位：下午段回到「午休结束 → 下班」
+  $('btnResetDown').addEventListener('click',()=>{
+    try{
+      const d=resetSegs();
+      tlSeg[2]={s:d.c.s, e:d.c.e};
+      tlSeg[1]={s:tlSeg[1].s, e:d.c.s};  // 午休终点对齐下午起点
+      renderDragTL();
+      toast(`下午 ${hhmm(d.c.s)} → 下班 ${hhmm(d.c.e)}`);
+    }catch(e){ tlSeg=null; toast('下班复位出错，已重置'); }
+  });
+  // 全部复位
+  $('btnTlReset').addEventListener('click',()=>{
+    try{
+      const d=resetSegs();
+      tlSeg=[{s:d.a.s,e:d.a.e},{s:d.b.s,e:d.b.e},{s:d.c.s,e:d.c.e}];
+      renderDragTL();
+      eggReset();
+      toast(`已复位：上班 ${hhmm(d.a.s)} · 午休 ${hhmm(d.b.s)}-${hhmm(d.b.e)} · 下班 ${hhmm(d.c.e)}`);
+    }catch(err){
+      tlSeg=null;
+      toast('复位时出错，已重置为默认时段');
+    }
+  });
+}
+function curNow(){ const d=new Date(); return d.getHours()*60+d.getMinutes()+d.getSeconds()/60; }
+function fmtDur(m){ m=Math.max(0,m); const h=Math.floor(m/60), mm=Math.round(m%60); return h?(mm?`${h}h${mm}m`:`${h}h`):`${mm}m`; }
+/** 三段净工作总时长（分钟）—— 上午 + 下午（不含午休） */
+function tlTotalWork(){
+  if(!tlSeg||!tlSeg[0]) return 0;
+  return Math.max(0, tlSeg[0].e-tlSeg[0].s) + Math.max(0, tlSeg[2].e-tlSeg[2].s);
+}
+
+function renderDragTL(){
+  if(!tlSeg||!tlSeg[0]) return;
+  const now=curNow();
+
+  for(let i=0;i<3;i++){
+    const seg=tlSeg[i];
+    const isRest=(i===1);
+    // 已过比例（按当前时间）
+    const timePct=Math.max(0,Math.min(1,(now-seg.s)/Math.max(1,seg.e-seg.s)))*100;
+    // 预设比例（按这段的总时长）
+    const setPct=Math.max(0,Math.min(1,(seg.e-seg.s)/TL_SPAN_MAX))*100;
+    // 实心 = 已过；斜纹 = 预设的未来部分
+    $('fil'+'ABC'[i]).style.width=timePct.toFixed(2)+'%';
+    $('pre'+'ABC'[i]).style.left=timePct.toFixed(2)+'%';
+    $('pre'+'ABC'[i]).style.width=Math.max(0,setPct-timePct).toFixed(2)+'%';
+    $('knb'+'ABC'[i]).style.left=setPct.toFixed(2)+'%';
+    $('tl'+'ABC'[i]+'1').textContent=hhmm(seg.s);
+    $('tl'+'ABC'[i]+'2').textContent=hhmm(seg.e);
+    $('td'+i).className='tl-dot'+((now>=seg.s&&!isRest)?' on':'')+(isRest&&now>=seg.s?' rest':'');
+    $('seg'+'ABC'[i]).classList.toggle('now', now>=seg.s && now<=seg.e);
+    $('seg'+'ABC'[i]).classList.toggle('done', now>seg.e);
+  }
+  const d0=tlSeg[0].e-tlSeg[0].s, d1=tlSeg[1].e-tlSeg[1].s, d2=tlSeg[2].e-tlSeg[2].s;
+  $('txtA').innerHTML = now<tlSeg[0].s ? `距上班 <b style="color:var(--ok)">${fmtDur(tlSeg[0].s-now)}</b>`
+    : now<tlSeg[0].e ? `已上 <b style="color:var(--ok)">${fmtDur(now-tlSeg[0].s)}</b> · 还剩 ${fmtDur(tlSeg[0].e-now)}`
+    : `<b style="color:var(--bad)">已超时 ${fmtDur(now-tlSeg[0].e)}</b> · 设置 ${fmtDur(d0)}`;
+  $('txtB').textContent = now<tlSeg[1].s ? '未开始'
+    : now<tlSeg[1].e ? `休息中 · 还剩 ${fmtDur(tlSeg[1].e-now)}`
+    : `共 ${fmtDur(d1)}${now>tlSeg[1].e?` · <span style="color:var(--bad)">超时 ${fmtDur(now-tlSeg[1].e)}</span>`:''}`;
+  $('txtC').innerHTML = now<tlSeg[2].s ? '未开始'
+    : now<tlSeg[2].e ? `已上 <b style="color:var(--ok)">${fmtDur(now-tlSeg[2].s)}</b> · 还剩 ${fmtDur(tlSeg[2].e-now)}`
+    : (now>tlSeg[2].e
+        ? `<b style="color:var(--bad)">已超时 ${fmtDur(now-tlSeg[2].e)}</b> · 设置 ${fmtDur(d2)}`
+        : `已完成 <b style="color:var(--ok)">${fmtDur(d2)}</b>`);
+
+  // 今日整体：从上班时间到下班时间
+  const os=tlSeg[0].s, oe=tlSeg[2].e;
+  const oSpan=Math.max(1, oe-os);
+  const oPct=Math.max(0,Math.min(1,(now-os)/oSpan))*100;
+  $('filO').style.width=oPct.toFixed(2)+'%';
+  $('txtO').textContent=`${hhmm(os)} → ${hhmm(oe)}`;
+  const restM=Math.max(0,tlSeg[1].e-tlSeg[1].s);
+  const workedNow=Math.max(0, Math.min(oe,now)-os) - (now>tlSeg[1].s&&now<tlSeg[1].e ? (now-tlSeg[1].s) : 0);
+  const total=tlTotalWork();
+  $('txtON').innerHTML=
+    `净工作 <b style="color:var(--acc)">${(total/60).toFixed(2)} h</b>　`+
+    `午休 ${(restM/60).toFixed(1)} h　`+
+    `当前已上 <b style="color:var(--ok)">${(workedNow/60).toFixed(1)} h</b>`;
+
+  // ★ 超时检测：时间已过某段设置值但条还没满 → 触发彩蛋（5 分钟内不重复）
+  if(!tlDragging && !eggOverLock){
+    if((now>tlSeg[0].e+1) || (now>tlSeg[2].e+1)){
+      eggOverLock=true;
+      eggCheckOver();
+      setTimeout(()=>{ eggOverLock=false; }, 300000);
+    }
+  }
+}
+
+/* ==========================================================
+   全年总览：事件委托（只绑一次，不会被 DOM 重建吃掉）
+   ========================================================== */
+function initYearClick(){
+  const gy=$('yearGrid');
+  gy.addEventListener('click',e=>{
+    const card=e.target.closest('.mcard');
+    if(!card || !card.dataset.m) return;
+    const m=+card.dataset.m;
+    CFG.viewM=m; save();
+    buildCal();                       // 重建该月日历
+    openSheet('calSheet');            // 直接弹出该月日历
+    toast(`已打开 ${y0}/${pad(m)} 日历`);
+  });
+}
+const y0=viewYear();
+$('bgUpload').addEventListener('click',()=>$('bgFile').click());
+$('bgFile').addEventListener('change',e=>{
+  const f=e.target.files&&e.target.files[0];
+  if(!f) return;
+  if(f.size>4*1024*1024){ toast('图片太大了，换张小于 4MB 的'); return; }
+  const r=new FileReader();
+  r.onload=()=>{
+    CFG.bgImg=r.result; save(); applyTheme(); showBgPreview();
+    document.body.classList.add('has-bgimg');
+    toast('背景已设置 · 卡片已开启毛玻璃效果');
+  };
+  r.readAsDataURL(f);
+});
+$('bgDim').addEventListener('change',e=>{ CFG.bgDim=+e.target.value; save(); applyTheme(); });
+$('btnBgClear').addEventListener('click',()=>{
+  CFG.bgImg=''; save(); applyTheme(); showBgPreview();
+  document.body.classList.remove('has-bgimg');
+  toast('背景已清除');
+});
+function showBgPreview(){
+    const p=$('bgPrev');
+    if(p){
+      if(CFG.bgImg){ p.style.display='block'; p.style.backgroundImage=`url("${CFG.bgImg}")`; }
+      else p.style.display='none';
+    }
+    const veil=$('bgVeil');
+    if(veil) veil.style.display = CFG.bgImg ? 'block' : 'none';
+  }
+  /* ===== 自定义背景：视差 + 光泽跟随鼠标 ===== */
+  function initBgInteraction(){
+    if(CFG.bgImg) document.body.classList.add('has-bgimg');
+    let raf=null, tx=0, ty=0;
+    const veil=$('bgVeil');
+    window.addEventListener('mousemove', e=>{
+      if(!CFG.bgImg) return;
+      tx=(e.clientX/window.innerWidth  - .5);      // -0.5 ~ +0.5
+      ty=(e.clientY/window.innerHeight - .5);
+      if(raf) return;
+      raf=requestAnimationFrame(()=>{
+        raf=null;
+        // 背景轻微视差
+        document.body.style.backgroundPosition=
+          `calc(50% + ${(-tx*14).toFixed(1)}px) calc(50% + ${(-ty*14).toFixed(1)}px)`;
+        // veil 上加一个跟随鼠标的柔光
+        if(veil){
+          const px=(e.clientX/window.innerWidth*100).toFixed(1);
+          const py=(e.clientY/window.innerHeight*100).toFixed(1);
+          veil.style.background=
+            `radial-gradient(560px circle at ${px}% ${py}%, rgba(255,255,255,.10) 0%, transparent 62%),`+
+            `radial-gradient(ellipse at 50% 0%, rgba(0,0,0,.42) 0%, transparent 55%),`+
+            `linear-gradient(180deg, rgba(0,0,0,.30) 0%, transparent 22%, transparent 78%, rgba(0,0,0,.34) 100%)`;
+        }
+      });
+    }, {passive:true});
+    // 触摸设备：按下时短暂加强模糊感
+    window.addEventListener('touchstart', ()=>{
+      if(!CFG.bgImg) return;
+      document.body.classList.add('bg-touch');
+      setTimeout(()=>document.body.classList.remove('bg-touch'), 700);
+    }, {passive:true});
+  }
+
+/* ==========================================================
+   首次使用引导 + 一键清空（分享/借用给他人时用）
+   ========================================================== */
+const KEY_SEEN='salary_ticker_v2_seen';   // 只存"看过引导"的标记，不含任何数据
+
+/** ★ 跳过引导：不卡在 confirm 上，两个按钮共用 */
+/** 收尾：关面板 + 重建一切（每步都包 try，任何一步挂了都能退出引导） */
+/** 实时算午休时长 + 自动算净工时 */
+
+/** 让输入框在缺失时闪一下红光 */
+/** 引导页是强制的：遮罩点击/ESC/✕ 都不许关 */
+function markSeen(){
+  try{ localStorage.setItem(KEY_SEEN,'1'); }catch(e){}
+}
+/** 一键清空所有本地数据 —— 借给别人用之前点这个 */
+function resetAllData(){
+  const w = $('resetBox');
+  w.innerHTML=
+    `<div style="font-size:13px;line-height:1.9;color:var(--txt2);margin-bottom:14px">
+       这会清空<b style="color:var(--bad)">本设备</b>保存的全部内容：<br>
+       · 月薪 / 上下班时间 / 工时<br>
+       · 所有请假、加班记录<br>
+       · 皮肤、调色盘、自定义背景<br>
+       · 导入的配置备份<br>
+       <span style="color:var(--warn)">无法撤销。</span><br><br>
+       如果你是<b>把这个程序借给别人用</b>，点这个之后对方打开就是<b>干净的出厂状态</b>（月薪 ¥7000、双休、无任何记录）。
+     </div>
+     <div style="display:flex;gap:8px">
+       <button class="ghost" style="flex:1;margin:0" data-close>取 消</button>
+       <button class="del" style="flex:1;margin:0" id="btnResetConfirm">确认清空</button>
+     </div>`;
+  openSheet('resetSheet');
+  $('btnResetConfirm').addEventListener('click',()=>{
+    try{
+      Object.keys(localStorage)
+        .filter(k=>k.startsWith('salary_ticker'))
+        .forEach(k=>localStorage.removeItem(k));
+    }catch(e){}
+    location.reload();
+  });
+}
+
+$('btnResetAll').addEventListener('click', resetAllData);
+$('btnForceUpdate').addEventListener('click', ()=>{
+  if(window.forceUpdate) window.forceUpdate();
+  else { caches.keys().then(ks=>Promise.all(ks.map(k=>caches.delete(k)))).then(()=>location.reload(true)); }
+});
+showVer();
+
+/* ==========================================================
+   八、PWA：安装到桌面/手机 + 离线可用 + 更新提示
+   ========================================================== */
+let _deferredPrompt=null;
+const isStandalone=()=>(
+  window.matchMedia('(display-mode: standalone)').matches ||
+  window.matchMedia('(display-mode: window-controls-overlay)').matches ||
+  window.navigator.standalone===true
+);
+window.addEventListener('beforeinstallprompt', e=>{
+  e.preventDefault();
+  _deferredPrompt=e;
+  const b=$('btnInstall');
+  if(b) b.style.display='';
+});
+window.addEventListener('appinstalled', ()=>{
+  _deferredPrompt=null;
+  const b=$('btnInstall'); if(b) b.style.display='none';
+  toast('已安装！可以从桌面/主屏幕直接打开 🎉');
+});
+$('btnInstall').addEventListener('click', async ()=>{
+  if(!_deferredPrompt){ showInstallGuide(); return; }
+  _deferredPrompt.prompt();
+  const {outcome}=await _deferredPrompt.userChoice;
+  if(outcome==='accepted') $('btnInstall').style.display='none';
+  _deferredPrompt=null;
+});
+function showInstallGuide(){
+  const ua=navigator.userAgent;
+  const isIOS=/iPad|iPhone|iPod/.test(ua) || (navigator.platform==='MacIntel' && navigator.maxTouchPoints>1);
+  const isAndroid=/Android/.test(ua);
+  openSheet('installSheet');
+  $('installTip').innerHTML = isIOS
+    ? `<b>iPhone / iPad：</b><br>
+       ① 点底部（或右上角）的 <b>分享按钮</b> <span style="font-size:15px">􀈂</span><br>
+       ② 往下滑，选 <b>「添加到主屏幕」</b><br>
+       ③ 点右上角 <b>添加</b>，桌面上就会出现图标<br>
+       <span style="opacity:.7">⚠️ iPad Safari 要在「分享 → 添加到主屏幕」里找，找不到就用 Chrome</span>`
+    : isAndroid
+      ? `<b>Android：</b><br>① 点右上角 <b>⋮ 菜单</b><br>② 选 <b>「安装应用」</b> 或「添加到主屏幕」<br>③ 确认安装`
+      : `<b>Windows / Mac：</b><br>
+         ① 点地址栏右侧的 <b>安装图标</b> <span style="font-size:14px">⊕</span>（或菜单里的「安装秒薪」）<br>
+         ② 确认后会在桌面/开始菜单生成独立窗口的 App<br>
+         <span style="opacity:.7">Chrome / Edge 都支持；如果没看到图标，试试菜单里的「安装页面为应用」</span>`;
+  if(isStandalone()) $('installTip').innerHTML='<b>你已经在 App 模式下运行了 ✓</b><br><span style="opacity:.7">关闭窗口再从桌面图标打开即可。</span>';
+}
+$('btnCopyLink').addEventListener('click',()=>{
+  const url=location.protocol==='file:' ? 'https://salary-ticker.app.workbuddy.host/' : location.href;
+  navigator.clipboard?.writeText(url)
+    .then(()=>toast('网址已复制，粘贴到手机浏览器打开即可安装'))
+    .catch(()=>prompt('复制这个网址：', url));
+});
+
+/* ==========================================================
+   首次使用：★不再强制弹窗★
+   用户点空白处就能直接进程序，只在顶部提示一句可以改设置。
+   ========================================================== */
+function firstRunHint(){
+  let seen=false;
+  try{ seen=!!localStorage.getItem(KEY_SEEN); }catch(e){}
+  if(seen) return;
+  markSeen();
+  setTimeout(()=>{
+    toast('当前是默认设置（¥8000 · 双休）· 点右上角 ⚙️ 可改成你的', 5200);
+  }, 1200);
+}
+
+/* ==========================================================
+   PWA 更新逻辑 ===== */
+var APP_VER='v15';                         // ★每次改动功能就 +1（用 var 避免 TDZ 报错）
+function showVer(){
+  const b=$('btnVer');
+  if(b) b.textContent='v'+APP_VER;
+}
+if('serviceWorker' in navigator){
+  window.addEventListener('load', ()=>{
+    navigator.serviceWorker.register('./sw.js')
+      .then(reg=>{
+        // ★每 30 秒问一次服务器"有新版本吗"
+        setInterval(()=>{ try{ reg.update(); }catch(e){} }, 30000);
+        reg.addEventListener('updatefound', ()=>{
+          const nw=reg.installing;
+          if(!nw) return;
+          nw.addEventListener('statechange', ()=>{
+            if(nw.state==='installed' && navigator.serviceWorker.controller){
+              toast('发现新版本，正在更新…');
+              // 立刻让新 SW 接管
+              try{ nw.postMessage('skipWaiting'); }catch(e){}
+            }
+          });
+        });
+      })
+      .catch(()=>{});
+  });
+  // 新 SW 接管后自动重载一次
+  let refreshing=false;
+  navigator.serviceWorker.addEventListener('controllerchange', ()=>{
+    if(refreshing) return;
+    refreshing=true;
+    location.reload();
+  });
+  // ★手动清缓存 + 强制更新（设置里那个按钮调它）
+  window.forceUpdate=async function(){
+    try{
+      const regs=await navigator.serviceWorker.getRegistrations();
+      await Promise.all(regs.map(r=>r.unregister()));
+      if(window.caches){
+        const keys=await caches.keys();
+        await Promise.all(keys.map(k=>caches.delete(k)));
+      }
+      toast('已清空缓存，正在重新加载…');
+      setTimeout(()=>location.reload(true), 600);
+      return true;
+    }catch(e){ toast('清缓存失败：'+e.message); return false; }
+  };
+}
+
+// 已安装时自动隐藏安装按钮
+setTimeout(()=>{
+  if(isStandalone()) $('btnInstall').style.display='none';
+  // file:// 打开时提示可以走 PWA
+  if(location.protocol==='file:'){
+    const b=$('btnInstall');
+    if(b){ b.style.display=''; b.title='当前是本地文件模式，功能受限'; }
+  }
+}, 600);
+
+/* ==========================================================
+   九、主渲染
+   ========================================================== */
+function render(){
+  const now=new Date();
+  const y=viewYear(), m=viewMonth();
+  const d=monthCalc(y,m,now);
+  const dec=CFG.decimals;
+
+  // 今日数据始终按「今天真实所在月」算
+  const cy=now.getFullYear(), cm=now.getMonth()+1;
+  const today=monthCalc(cy,cm,now);
+
+  // Hero
+  if(today.tStatus===3) $('heroKick').textContent='今 日（半天假）';
+  else if(today.tStatus===2) $('heroKick').textContent='今 日（请假）';
+  else if(today.tStatus===0) $('heroKick').textContent = inHoliday(ymd(new Date()))?'今 日（法定假）':'今 日（休息）';
+  else $('heroKick').textContent='今 日 已 赚';
+  $('heroVal').textContent=money(today.tEarned,dec);
+  $('heroState').innerHTML=today.tState+
+    (today.tStatus>=1&&today.tStatus<=3&&today.cur>today.WS&&today.cur<today.WE
+      ?`　<span class="sub">· 已工作 ${(today.tWorked/60).toFixed(2)} h</span>`:'');
+
+  $('rSec').textContent='¥'+today.secRate.toFixed(6);
+  $('rMin').textContent='¥'+today.minRate.toFixed(3);
+  $('rHour').textContent='¥'+today.hourRate.toFixed(2);
+
+  // 内联编辑同步（编辑中不覆盖用户输入）
+  const syncInline=(id,txt)=>{ const el=$(id); if(el && !el.dataset.editing) el.textContent=txt; };
+  syncInline('eSalary','¥'+CFG.salary);
+  syncInline('eStart',CFG.start);
+  syncInline('eEnd',CFG.end);
+  syncInline('eLunch',CFG.lunch1+'-'+CFG.lunch2);
+  syncInline('eHours',CFG.hours+'h');
+
+  const tPct=today.NET>0?Math.min(1,today.tWorked/today.NET):0;
+  $('tFill').style.width=(tPct*100).toFixed(3)+'%';
+  $('tHours').textContent=(today.tWorked/60).toFixed(1)+' / '+(today.NET/60).toFixed(1)+' h';
+  $('tPct').textContent=(tPct*100).toFixed(1)+'%';
+
+  const mPct=d.finalPay>0?Math.min(1,d.earned/d.finalPay):0;
+  $('mFill').style.width=(mPct*100).toFixed(3)+'%';
+  $('mGot').textContent='¥'+money(d.earned,dec);
+  $('mExp').textContent='¥'+money(d.finalPay,dec);
+  $('mPct').textContent=(mPct*100).toFixed(1)+'%';
+
+  // 今日详情
+  $('todayDate').textContent=`${cy}年${cm}月${now.getDate()}日 周${'日一二三四五六'[now.getDay()]}`;
+  $('cDay').textContent='¥'+money(today.rate,2);
+  $('cDayS').textContent=today.due>0?`月薪 ¥${CFG.salary} ÷ ${today.due} 天`:'—';
+  $('cLeft').textContent='¥'+money(today.tRemain,2);
+  $('cLeftS').textContent=
+    (today.tStatus===1||today.tStatus===3)
+      ? (today.cur>=today.WE||today.tEarned>=today.rate/2-0.001?'今日已满':`还剩 ${today.tRemainH.toFixed(2)} h`)
+      : (today.tStatus===2?'请假无工资':(inHoliday(ymd(new Date()))?'法定假无工资':'休息日'));
+  $('cTime').textContent=CFG.start+' - '+CFG.end;
+  $('cLunch').textContent=`午休 ${CFG.lunch1}-${CFG.lunch2}（扣 ${today.LUNCH} 分钟）`;
+
+  // 状态栏：先判断今天是否工作日，非工作日不按时间推进显示
+  let ls,lss;
+  const isWD = (today.tStatus===1||today.tStatus===3);
+  if(today.tStatus===2){ ls='请假'; lss='全天不计工资'; }
+  else if(today.tStatus===3){ ls='半天假'; lss=(CFG.override[ymd(new Date())]==='lv2'?'下午不上班':'上午不上班'); }
+  else if(today.tStatus===0){ ls=inHoliday(ymd(new Date()))?'法定假':'休息'; lss='今日不计工资'; }
+  else if(!isWD){ ls='休息'; lss='今日不计工资'; }
+  else if(today.cur<today.WS){ ls='未开始'; lss=`距上班 ${Math.round(today.WS-today.cur)} 分钟`; }
+  else if(today.cur<today.LS){ ls='上午上班中'; lss=`距午休 ${Math.round(today.LS-today.cur)} 分钟`; }
+  else if(today.cur<today.LE){ ls='午休中'; lss=`还剩 ${Math.round(today.LE-today.cur)} 分钟`; }
+  // —— 用户指定：13:00-14:00 显示「已复工」，14:00 之后到下班显示「正在上班」 ——
+  else if(today.cur<today.LE+60){ ls='已复工'; lss=`下午已上班 ${Math.round(today.cur-today.LE)} 分钟`; }
+  else if(today.cur<today.WE){ ls='正在上班'; lss=`距下班 ${Math.round(today.WE-today.cur)} 分钟`; }
+  else{ ls='已下班'; lss='今日已完成'; }
+  $('cState').textContent=ls;
+  $('cState').style.color = (today.tStatus===0||today.tStatus===2||today.tStatus===3) ? 'var(--txt2)' : 'var(--ok)';
+  $('cStateS').textContent=lss;
+
+  // ★三段独立时间轴：每帧都校验 tlSeg 有效性，失效就重建（修复复位无效）
+  if(!tlInit){ tlInit=true; initDragTL(); }
+  if(!tlSeg || !tlSeg[0] || !tlSeg[1] || !tlSeg[2]){
+    tlSeg=[{s:today.WS,e:today.LS},{s:today.LS,e:today.LE},{s:today.LE,e:today.WE}];
+  }
+  renderDragTL();
+
+  // 本月
+  $('monthTitle').textContent = d.isCurrent?'本 月 账 目':`${y} 年 ${m} 月 账 目`;
+  $('mLabel').textContent=`${y}/${pad(m)}`;
+  $('mDays').textContent=d.due+' 天';
+  $('mRate').textContent='¥'+money(d.rate,2);
+  $('mFinal').textContent='¥'+money(d.finalPay,2);
+  $('mFinalS').textContent=`实出勤 ${d.work} / ${d.due} 天`;
+  $('mDeduct').textContent='¥'+money(d.deduct,2);
+  $('mLeaveS').textContent = d.leaveDaysF>0
+    ? (d.lvHalf>0 && d.lvFull>0 ? `全天${d.lvFull}天＋半天${d.lvHalf}天` : (d.lvHalf>0?`半天 ${d.lvHalf} 天`: `请假 ${d.lvFull} 天`)) + ` 折合 ¥${money(d.deduct,2)}`
+    : '无请假';
+  $('mWorked').textContent=d.workedDays+' 天';
+  $('mFuture').textContent='¥'+money(d.future,dec);
+  $('mFutureS').textContent=d.futureWorkDays>0?`剩 ${d.futureWorkDays} 个出勤日`:'本月已排完';
+  $('mHolWork').textContent=d.holWork+' 天';
+  $('mOtPay').textContent='¥'+money(d.otPay,2);
+  $('mOtPay').style.color = d.otPay>0 ? 'var(--ok)' : 'var(--txt3)';
+  $('mOtS').textContent = d.otDays>0
+    ? `${d.otDays}天 × ${CFG.hours}h × ¥${d.otHourRate.toFixed(0)}（${CFG.otRate}倍）`
+    : '无加班';
+
+  // 发薪倒计时
+  let payD;
+  if(m===CFG.payMon) payD=new Date(y,CFG.payMon-1,CFG.payDay);
+  else payD=new Date(y,m-1,CFG.payDay);
+  const t0=new Date(now); t0.setHours(0,0,0,0);
+  let dl=Math.round((payD-t0)/MS_D);
+  if(m!==CFG.payMon && payD<new Date(y,m,1)) dl=Math.round((payD-t0)/MS_D);
+  $('mPay').textContent=(dl>=0?dl:0)+' 天';
+  $('mPayS').textContent=`${payD.getMonth()+1}/${payD.getDate()} 发`;
+
+  const lvDesc = (d.lvFull>0?`全天 ${d.lvFull} 天`:'') + (d.lvHalf>0?`${d.lvFull>0?' ＋ ':''}半天 ${d.lvHalf} 天`:'');
+  $('calcNote').innerHTML=
+    `日薪 <b>¥${money(d.rate,2)}</b> ＝ 月薪 ¥${CFG.salary} ÷ 应出勤 <b>${d.due}</b> 天<br>`+
+    `分母构成：工作日 ${d.work} ＋ 节假日上班 ${d.holWork}${d.leaveDaysF>0?` ＋ 请假 ${lvDesc}（折合 ${d.leaveDaysF} 天）`:''}<br>`+
+    `时薪 <b>¥${money(d.hourRate,2)}</b>　每分钟 ¥${d.minRate.toFixed(3)}　每秒 ¥${d.secRate.toFixed(6)}<br>`+
+    (d.leaveDaysF>0
+      ? `实发 ＝ ¥${CFG.salary} <span class="neg">− ${lvDesc} 折合 ${d.leaveDaysF}天 × ¥${money(d.rate,2)} ＝ ¥${money(d.deduct,2)}</span>` +
+        (d.otPay>0 ? ` <span class="pos">＋ 加班费 ¥${money(d.otPay,2)}</span>` : '') +
+        ` ＝ <b>¥${money(d.finalPay,2)}</b><br>`
+      : (d.otPay>0
+        ? `无请假，到手 <b>¥${money(d.finalPay,2)}</b>（含加班费 <span class="pos">¥${money(d.otPay,2)}</span>）<br>`
+        : `本月无请假，到手 <b>¥${money(d.finalPay,2)}</b><br>`))+
+    (d.otDays>0 ? `加班 ${d.otDays} 天不摊薄日薪，按 ${CFG.otRate} 倍时薪 ¥${money(d.otHourRate,2)} 另算<br>`:'')+
+    `已赚 <b>¥${money(d.earned,dec)}</b>，之后还能赚 ¥${money(d.future,dec)}`;
+
+  // 里程碑
+  const MS=100, msDone=Math.floor(d.earned/MS)*MS, msNext=msDone+MS;
+  if(d.isCurrent && msDone>lastMS && lastMS>=0){
+    toast(`🎉 本月已赚破 <b>¥${msDone}</b>　（${(msDone/CFG.salary*100).toFixed(0)}%）`);
+  }
+  lastMS=msDone;
+
+  // 双维度评级 + 购物力
+  CUR_T={ tEarnedLive: today.tEarned, tRateFull: today.rate };
+  CUR_M={ mEarned: d.earned, mFinal: d.finalPay };
+  renderRank({ tEarnedLive:CUR_T.tEarnedLive, tRateFull:CUR_T.tRateFull,
+               mEarned:CUR_M.mEarned, mFinal:CUR_M.mFinal });
+  injectDecor();
+  // 八条表情跟着今天的状态变（只换内容，不重注入）
+  if(CFG.theme==='cat8') updateCat8(catMood(today.tStatus));
+
+  // 语录：状态（时段 / 日历）切换时自动换一次
+  const mode=getQuoteMode(now);
+  if(mode!==_quoteKind && _quoteText){ pickQuote(mode); }
+  if(!_quoteText) pickQuote(mode);
+
+  renderYear(y,now);
+}
+
+/* —— 全年总览 —— */
+function renderYear(y,now){
+  const gy=$('yearGrid'); if(gy.style.display==='none') return;
+  const cy=now.getFullYear(), cm=now.getMonth()+1;
+  let sum=0, daySum=0;
+  const cards=[];
+  for(let m=1;m<=12;m++){
+    const d=monthCalc(y,m,m===cm?now:null);
+    sum+=d.finalPay; daySum+=d.due;
+    const hols=d.list.filter(it=>it.hv&&!it.hw).length;
+    const ot=d.list.filter(it=>it.st===1).length;
+    cards.push(`<div class="mcard ${y===cy&&m===cm?'cur':''}" data-m="${m}">
+      <div class="mn"><b>${y}/${pad(m)}</b>${m===cm&&y===cy?'<span class="badge">本月</span>':(hols?`<span class="badge">假${hols}天</span>`:'')}</div>
+      <div class="pay">¥${money(d.finalPay,0)}</div>
+      <div class="sub">${d.due}天 · 日薪¥${money(d.rate,0)} · 时薪¥${money(d.hourRate,0)}</div>
+      <div class="msub"><span>上班 ${ot} 天</span>${d.leaveDaysF>0?`<span class="lv">假${d.leaveDaysF}</span>`:''}<span class="go">查看日历 ›</span></div>
+    </div>`);
+  }
+  const html=cards.join('');
+  // ★关键：只在内容真的变了时才重建 DOM。
+  // 之前每帧无条件重建 + 重新绑 click，用户点击瞬间元素已被替换 → 点了没反应。
+  if(gy._hash !== html){
+    gy._hash = html;
+    gy.innerHTML = html;
+  }
+  $('yLabel').textContent=y;
+  $('yTotal').textContent='¥'+money(sum,0);
+  $('yDays').textContent=daySum+' 天';
+  $('yearNote').innerHTML=
+    `按当前设置（${WORKNAME[CFG.workMode]} · ${holLabel()}）全年预计到手 <b>¥${money(sum,2)}</b>，全年应出勤 <b>${daySum}</b> 天。<br>`+
+    `点任意月份卡片可打开该月日历（上班日、法定假、日薪时薪）。国庆/春节等法定假日已自动扣除，「放假+扣薪日」模式下每个假日会多出 1 天上班日。`;
+}
+const WORKNAME={alt:'大小周',double:'正常双休',single:'单休'};
+const HOLNAME={work:'放假 + 扣薪日',off:'法定假日全休',paid:'法定假日全薪'};
+function holLabel(){ return HOLNAME[CFG.holMode]||''; }
+
+/* —— 日历 —— */
+function buildCal(){
+  const y=viewYear(), m=viewMonth(), total=daysInMonth(y,m);
+  const d=monthCalc(y,m,null);
+  const hd=$('calHead');
+  // ★必须用 getDay() 的原始顺序：0=周日 1=周一 ... 6=周六
+  const WEEK=['日','一','二','三','四','五','六'];
+  let hh='';
+  for(let i=0;i<7;i++){
+    const dow=(CFG.firstDay+i)%7;      // 该列对应的 getDay() 值
+    const isWe=(dow===0||dow===6);
+    hh+=`<div class="${isWe?'we':''}">${WEEK[dow]}</div>`;
+  }
+  hd.innerHTML=hh;
+  const off=(new Date(y,m-1,1).getDay()-CFG.firstDay+7)%7;
+  let h=''; for(let i=0;i<off;i++) h+='<div></div>';
+  const tk=ymd(new Date());
+  const now=new Date();
+  const cur=now.getHours()*60+now.getMinutes()+now.getSeconds()/60;
+  const curY=now.getFullYear(), curM=now.getMonth()+1;
+
+  for(let it of d.list){
+    const k=it.k, st=it.st, hol=holidayOf(k);
+    // 是不是「本来休息、被手动改成上班」→ 加班
+    const base0=baseStatus(k);
+    const isOT = st===1 && base0===0;
+    let cls,amt='',tag='';
+    if(st===2){ cls='leave'; amt='全天假'; tag='假'; }
+    else if(st===3){ cls='half'; amt='半天'; tag='半'; }
+    else if(st===1){
+      amt=Math.round(d.rate);
+      if(isOT){ cls='ot'; tag='加'; }                        // 休息日加班
+      else if(it.hw){ cls='holWork'; tag='班'; }              // 法定假日里公司要求上班
+      else{
+        cls='work';
+        if(MAKEUP.includes(k)) tag='调';
+        else if(parseYMD(k).getDay()===6) tag='大';
+      }
+    }
+    else { cls = it.hv ? 'hol' : 'rest'; amt = hol?hol.n:''; }
+    if(k===tk) cls+=' today';
+    h+=`<div class="day ${cls}" data-k="${k}">${tag?`<span class="tag">${tag}</span>`:''}<span class="dn">${it.i}</span><span class="am">${amt}</span></div>`;
+  }
+  $('cal').innerHTML=h;
+  const workDays=d.list.filter(x=>x.st===1).length;
+  $('calTitle').innerHTML=`${y} 年 ${m} 月　应出勤 <b style="color:var(--acc)">${d.due}</b> 天 · 到手 <b style="color:var(--warn)">¥${money(d.finalPay,2)}</b>`;
+  $('calNote').innerHTML=
+    `<div class="calstat">
+       <span>日薪 <b>¥${money(d.rate,2)}</b></span>
+       <span>时薪 <b>¥${money(d.hourRate,2)}</b></span>
+       <span>分钟 <b>¥${d.minRate.toFixed(2)}</b></span>
+       <span>每秒 <b>¥${d.secRate.toFixed(4)}</b></span>
+     </div>`+
+    `<div class="calstat2">
+       <span>上班 <b>${workDays}</b> 天</span>
+       <span>节假日上班 <b>${d.holWork}</b> 天</span>
+       <span>请假折合 <b>${d.leaveDaysF}</b> 天</span>
+       <span>法定假 <b>${d.holRest}</b> 天</span>
+       <span>其他休息 <b>${Math.max(0,d.rest-d.holRest)}</b> 天</span>
+     </div>`+
+    `<b style="color:var(--acc)">点任意日期</b>可打开转盘，直接选上班 / 休息 / 全天假 / 半天假。<br>`+
+    `“调”＝法定调休上班日　“大”＝${WORKNAME[CFG.workMode]}制度下的周六上班　“班”＝法定假日里公司要求上班（全薪平摊）`;
+
+  }
+/** 日历格子点击 → 事件委托（只绑一次，不会被 buildCal 重建吃掉） */
+function initCalClick(){
+  const box=$('cal');
+  box.addEventListener('click',e=>{
+    const el=e.target.closest('.day');
+    if(!el || !el.dataset.k) return;
+    openWheel(el.dataset.k);
+  });
+}
+
+/* ==========================================================
+   七、轮盘选择器（替代单击循环，避免误触）
+   ========================================================== */
+let WHEEL_KEY=null;
+const WHEEL_OPTS=[
+  { v:null,   ic:'↺', t:'恢复默认', s:'按制度',  cls:'w-off'  },
+  { v:'work', ic:'💼', t:'上班',     s:'加班',    cls:'w-work' },
+  { v:'lv',    ic:'🌴', t:'全天假',   s:'扣1天',   cls:'w-lv'   },
+  { v:'lv1',   ic:'🌤️', t:'半天假',   s:'上午',    cls:'w-h1'   },
+  { v:'lv2',   ic:'🌆', t:'半天假',   s:'下午',    cls:'w-h2'   },
+  { v:'off',   ic:'😴', t:'休息',     s:'不计薪',  cls:'w-off'  },
+];
+const WHEEL_LABEL={work:'上班（加班）',lv:'请假（全天）',lv1:'半天假（上午）',lv2:'半天假（下午）',off:'休息'};
+
+function baseLabelOf(k){
+  const b=baseStatus(k);
+  if(b===1){
+    if(isHolidayWork(k)) return '法定假日上班';
+    if(MAKEUP.includes(k)) return '法定调休上班';
+    if(parseYMD(k).getDay()===6) return WORKNAME[CFG.workMode]+'·周六上班';
+    return '正常工作日';
+  }
+  const h=holidayOf(k);
+  if(h) return '法定假日（'+h.n+'）';
+  return '休息日';
+}
+
+function openWheel(k){
+  WHEEL_KEY=k;
+  const d=new Date(k+'T00:00:00');
+  const W=['日','一','二','三','四','五','六'];
+  $('wDate').textContent=`${+k.slice(5,7)} 月 ${+k.slice(8)} 日 周${W[d.getDay()]}`;
+  const ov=CFG.override[k];
+  $('wBase').textContent = ov
+    ? `当前：${WHEEL_LABEL[ov]}　（原本是${baseLabelOf(k)}）`
+    : `当前：${baseLabelOf(k)}（按制度自动）`;
+
+  const R=150, ring=$('wheelRing');
+  ring.querySelectorAll('.wseg').forEach(e=>e.remove());
+  const cur=CFG.override[k]===undefined?null:CFG.override[k];
+  const baseIsRest = baseStatus(k)===0;   // 原本是休息日
+
+  // 休息日不能请假 —— 只给「恢复默认 / 上班(加班) / 休息」三项
+  const opts = baseIsRest
+    ? WHEEL_OPTS.filter(o=>[null,'work','off'].includes(o.v))
+    : WHEEL_OPTS;
+
+  opts.forEach((o,i)=>{
+    const ang=-90 + i*(360/opts.length);
+    const rad=ang*Math.PI/180;
+    const el=document.createElement('div');
+    el.className='wseg '+o.cls+(String(cur)===String(o.v)?' cur':'');
+    el.style.transform=`translate(${Math.cos(rad)*R}px,${Math.sin(rad)*R}px)`;
+    const sub = (o.v==='work'&&baseIsRest) ? '加班' : o.s;
+    el.innerHTML=`<span class="ic">${o.ic}</span><span class="t">${o.t}</span><span class="s">${sub}</span>`;
+    el.addEventListener('click',()=>pickWheel(o));
+    ring.appendChild(el);
+  });
+
+  // 背景扇形（纯装饰）
+  if(!ring.querySelector('svg')){
+    const ns='http://www.w3.org/2000/svg';
+    const svg=document.createElementNS(ns,'svg');
+    svg.setAttribute('viewBox','0 0 300 300');
+    let paths='';
+    opts.forEach((o,i)=>{
+      const step=360/opts.length;
+      const a0=(i*step-90-step/2)*Math.PI/180;
+      const a1=(i*step-90+step/2)*Math.PI/180;
+      const r1=118,r2=126;
+      const x0=150+Math.cos(a0)*r1, y0=150+Math.sin(a0)*r1;
+      const x1=150+Math.cos(a1)*r1, y1=150+Math.sin(a1)*r1;
+      const x2=150+Math.cos(a1)*r2, y2=150+Math.sin(a1)*r2;
+      const x3=150+Math.cos(a0)*r2, y3=150+Math.sin(a0)*r2;
+      paths+=`<path d="M150 150 L${x0} ${y0} A${r1} ${r1} 0 0 1 ${x1} ${y1} Z" fill="var(--surface2)" opacity=".55"/>
+              <path d="M${x0} ${y0} A${r1} ${r1} 0 0 1 ${x1} ${y1} L${x2} ${y2} A${r2} ${r2} 0 0 0 ${x3} ${y3} Z" fill="var(--stroke)" opacity=".8"/>`;
+    });
+    svg.innerHTML=paths;
+    ring.insertBefore(svg, ring.firstChild);
+  }
+  $('wheelTip').innerHTML = baseIsRest
+    ? '这天原本是<b style="color:var(--txt2)">休息日</b> · 只能选上班（算加班）或继续休息'
+    : '点扇形选择 · 点中心取消 · Esc 关闭';
+  $('wheel').classList.add('show');
+}
+function pickWheel(o){
+  const k=WHEEL_KEY; if(!k) return;
+  if(o.v===null) delete CFG.override[k];
+  else CFG.override[k]=o.v;
+  save(); closeWheel(); buildCal(); render();
+  toast(`${k.slice(5)} → <b>${o.v===null?baseLabelOf(k):WHEEL_LABEL[o.v]}</b>`);
+}
+function closeWheel(){ $('wheel').classList.remove('show'); WHEEL_KEY=null; }
+$('wheelCore').addEventListener('click',closeWheel);
+$('wheel').addEventListener('click',e=>{ if(e.target===$('wheel')) closeWheel(); });
+// 状态栏也能点开轮盘改今天
+$('cState').addEventListener('click',()=>openWheel(ymd(new Date())));
+$('cState').style.cursor='pointer';
+$('cState').title='点击修改今天的状态';
+
+/* ==========================================================
+   八、内联编辑（月薪 / 上下班 / 午休 / 工时）
+   ========================================================== */
+function bindInline(id, getter, onOk, hint){
+  const el=$(id);
+  el.addEventListener('click',()=>{
+    if(el.dataset.editing) return;
+    el.dataset.editing='1';
+    el.contentEditable='true';
+    el.textContent=getter();
+    el.focus();
+    const r=document.createRange(); r.selectNodeContents(el);
+    const s=getSelection(); s.removeAllRanges(); s.addRange(r);
+  });
+  el.addEventListener('keydown',e=>{
+    if(e.key==='Enter'){ e.preventDefault(); el.blur(); }
+    if(e.key==='Escape'){ el.dataset.editing=''; el.textContent=getter(); el.blur(); }
+  });
+  el.addEventListener('blur',()=>{
+    if(!el.dataset.editing) return;
+    el.dataset.editing=''; el.contentEditable='false';
+    const raw=el.textContent.trim();
+    if(onOk(raw)===false){
+      toast(`没改成功：${hint||'格式不对'}`);
+    }
+    el.textContent=getter();
+    render();
+  });
+}
+function parseTime(t){
+  const m=/^\s*(\d{1,2})\s*[:：.\s]\s*(\d{1,2})\s*$/.exec(t);
+  if(!m) return null;
+  const h=+m[1], mi=+m[2];
+  if(h>23||mi>59) return null;
+  return pad(h)+':'+pad(mi);
+}
+bindInline('eSalary', ()=>'¥'+CFG.salary,
+  raw=>{ const v=Math.round(+String(raw).replace(/[^\d.]/g,'')); if(!v||v<=0||v>1000000) return false; CFG.salary=v; save(); toast('月薪已改为 ¥'+v); },
+  '请输入数字，如 7000');
+bindInline('eStart', ()=>CFG.start,
+  raw=>{ const t=parseTime(raw); if(!t) return false; CFG.start=t; save(); toast('上班时间 '+t); },
+  '时间格式如 09:30');
+bindInline('eEnd', ()=>CFG.end,
+  raw=>{ const t=parseTime(raw); if(!t) return false; CFG.end=t; save(); toast('下班时间 '+t); },
+  '时间格式如 18:30');
+bindInline('eLunch', ()=>CFG.lunch1+'-'+CFG.lunch2,
+  raw=>{
+    const p=String(raw).replace(/[~～至到]/g,'-').split('-').map(s=>s.trim());
+    if(p.length!==2) return false;
+    const a=parseTime(p[0]), b=parseTime(p[1]);
+    if(!a||!b) return false;
+    if(minOf(a)>=minOf(b)) return false;
+    CFG.lunch1=a; CFG.lunch2=b; save(); toast('午休 '+a+'-'+b); },
+  '格式如 12:00-13:00');
+bindInline('eHours', ()=>CFG.hours+'h',
+  raw=>{ const v=+String(raw).replace(/[^\d.]/g,''); if(!v||v<=0||v>24) return false; CFG.hours=v; save(); toast('每日计薪 '+v+' 小时'); },
+  '小时数如 8');
+
+/* ==========================================================
+   九、交互
+   ========================================================== */
+function openSheet(id){ $(id).classList.add('show'); }
+document.querySelectorAll('[data-close]').forEach(b=>b.addEventListener('click',()=>{
+  const sh=b.closest('.sheet');
+  if(sh) sh.classList.remove('show');
+}));
+// 点遮罩空白处也能关闭（用户明确要求：点空白处直接进程序）
+document.querySelectorAll('.sheet').forEach(s=>s.addEventListener('click',e=>{
+  if(e.target!==s) return;
+  s.classList.remove('show');
+}));
+
+// 关闭所有弹窗
+function closeSheet(){
+  document.querySelectorAll('.sheet.show').forEach(s=>{
+    s.classList.remove('show');
+  });
+}
+/** ★强制关闭引导页（填完提交时用，绕开 modal 保护） */
+
+function toggleYear(on){
+  const y=$('yearCard'), show=on!==undefined?on:y.style.display==='none';
+  y.style.display=show?'':'none';
+  $('btnYear').classList.toggle('on',show);
+  $('btnYear2').classList.toggle('on',show);
+  if(show) renderYear(viewYear(),new Date());
+}
+$('btnYear').addEventListener('click',()=>toggleYear());
+$('btnYear2').addEventListener('click',()=>{toggleYear(true);$('yearCard').scrollIntoView({behavior:'smooth',block:'start'});});
+$('btnCal').addEventListener('click',()=>{buildCal();openSheet('calSheet');});
+$('prevM').addEventListener('click',()=>{let m=viewMonth()-1;if(m<1)m=12;setViewM(m);render();});
+$('nextM').addEventListener('click',()=>{let m=viewMonth()+1;if(m>12)m=1;setViewM(m);render();});
+$('prevY').addEventListener('click',()=>toast('当前仅支持 2026 年法定节假日数据'));
+$('nextY').addEventListener('click',()=>toast('当前仅支持 2026 年法定节假日数据'));
+
+$('btnSet').addEventListener('click',()=>{
+  $('sSalary').value=CFG.salary; $('sStart').value=CFG.start; $('sEnd').value=CFG.end;
+  $('sHours').value=CFG.hours; $('sL1').value=CFG.lunch1; $('sL2').value=CFG.lunch2;
+  $('sPay').value=CFG.payDay; $('sMon').value=CFG.payMon;
+  segSync('segWork',CFG.workMode); segSync('segParity',CFG.parity); segSync('segHol',CFG.holMode);
+  segSync('segDec',CFG.decimals); segSync('segWeek',CFG.firstDay); segSync('segOt',CFG.otRate);
+  otHint();
+  openSheet('setSheet');
+});
+function otHint(){
+  const el=$('otHint'); if(!el) return;
+  el.innerHTML=`当前 <b style="color:var(--ok)">${CFG.otRate} 倍</b>：休息日上一天班（${CFG.hours}h）多拿 <b style="color:var(--ok)">¥${money(moneyHour()*CFG.otRate,2)}</b>，且当日日薪不变。`;
+}
+function moneyHour(){
+  const t=new Date();
+  const d=monthCalc(t.getFullYear(), t.getMonth()+1, t);
+  return d.hourRate;
+}
+function holHint(){
+  const map={
+    work:'每个法定假期的最后一天算上班日（全薪平摊），其余天数放假。国庆＝放6天假+1天班，中秋＝放2天假+1天班。',
+    off:'法定假日期间全部放假，不计入应出勤、不扣工资。',
+    paid:'法定假日期间照常计薪，计入应出勤天数（相当于带薪假）。'
+  };
+  $('holHint').textContent=map[CFG.holMode]||'';
+}
+function segSync(id,v){
+  document.querySelectorAll('#'+id+' button').forEach(b=>b.classList.toggle('on',b.dataset.v===String(v)));
+}
+['segWork','segParity','segHol','segDec','segWeek','segOt'].forEach(id=>{
+  document.querySelectorAll('#'+id+' button').forEach(b=>{
+    b.addEventListener('click',()=>{
+      segSync(id,b.dataset.v);
+      if(id==='segHol'){ const d=document.querySelector('#segHol button.on'); if(d) CFG.holMode=d.dataset.v; holHint(); }
+      if(id==='segOt'){ const d=document.querySelector('#segOt button.on'); if(d){ CFG.otRate=+d.dataset.v; save(); otHint(); } }
+    });
+  });
+});
+$('btnSave').addEventListener('click',()=>{
+  const g=(id,def)=>{const v=$(id).value; return v===''?def:($(id).type==='number'?+v:v);};
+  CFG.salary=g('sSalary',7000); CFG.start=g('sStart','09:30'); CFG.end=g('sEnd','18:30');
+  CFG.hours=g('sHours',8); CFG.lunch1=g('sL1','12:00'); CFG.lunch2=g('sL2','13:00');
+  CFG.payDay=g('sPay',15); CFG.payMon=g('sMon',10);
+  const w=document.querySelector('#segWork button.on'); if(w) CFG.workMode=w.dataset.v;
+  const p=document.querySelector('#segParity button.on'); if(p) CFG.parity=+p.dataset.v;
+  const h=document.querySelector('#segHol button.on'); if(h) CFG.holMode=h.dataset.v;
+  const ot=document.querySelector('#segOt button.on'); if(ot) CFG.otRate=+ot.dataset.v;
+  const dc=document.querySelector('#segDec button.on'); if(dc) CFG.decimals=+dc.dataset.v;
+  const fw=document.querySelector('#segWeek button.on'); if(fw) CFG.firstDay=+fw.dataset.v;
+  save(); closeSheet(); buildCal(); render(); renderYear(viewYear(),new Date());
+  toast(`已保存 · ${WORKNAME[CFG.workMode]} · ${holLabel()}`);
+});
+$('btnExport').addEventListener('click',()=>{
+  const txt=JSON.stringify(CFG,null,2);
+  navigator.clipboard?.writeText(txt)
+    .then(()=>toast('配置已复制到剪贴板，粘贴保存即可备份'))
+    .catch(()=>{ const w=window.open('','_blank'); if(w){w.document.write('<pre>'+txt.replace(/</g,'&lt;')+'</pre>');} });
+});
+$('btnImport').addEventListener('click',()=>{
+  const t=prompt('粘贴之前导出的配置 JSON：');
+  if(!t) return;
+  try{ const o=JSON.parse(t); CFG=Object.assign(JSON.parse(JSON.stringify(DEF)),o); save();
+    document.documentElement.dataset.theme=CFG.theme; renderSkins(); buildCal(); render(); toast('导入成功'); }
+  catch(e){ toast('JSON 格式不对，导入失败'); }
+});
+$('btnReset').addEventListener('click',()=>{
+  if(!confirm('恢复默认？你的自定义出勤记录会被清空。')) return;
+  CFG=JSON.parse(JSON.stringify(DEF)); markSeen(); save();
+  document.documentElement.dataset.theme=CFG.theme; renderSkins(); buildCal(); render(); toast('已恢复默认');
+});
+
+// 老板键已移除（之前的全屏遮罩会挡住弹窗按钮）
+document.addEventListener('keydown',e=>{
+  // 正在输入（input / contenteditable / 有输入法组合）时不触发任何快捷键
+  const el=e.target;
+  const typing = el.tagName==='INPUT' || el.tagName==='TEXTAREA'
+    || el.isContentEditable || e.isComposing || e.keyCode===229;
+  if(typing) return;
+  if(e.key==='Escape'){
+    closeWheel();
+    document.querySelectorAll('.sheet.show').forEach(s=>s.classList.remove('show'));
+  }
+});
+
+/* ==========================================================
+   八、启动
+   ========================================================== */
+applyTheme();
+renderSkins();
+renderPalette();
+injectDecor();
+initYearClick();
+initCalClick();
+showBgPreview();
+initBgInteraction();
+buildCal();
+render();
+pickQuote();                       // 初始语录
+restartQuoteRotate();              // ★启动自动循环轮播
+
+// 第一次打开 → 不再强制弹窗，只在顶部提示一下（点空白处直接进程序）
+firstRunHint();
+eggReset();                        // ★彩蛋状态每次刷新自动重置（不持久化）
+(function loop(){ render(); requestAnimationFrame(loop); })();
+setInterval(buildCal,60000);
+</script>
+</body>
+</html>

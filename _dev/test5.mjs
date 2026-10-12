@@ -73,7 +73,7 @@ console.log('\n【2】皮肤实装修复（用户报告的核心问题）');
   const vt=js.match(/const VALID_THEMES=\[([^\]]+)\]/);
   const listed = vt ? (vt[1].match(/'([a-z0-9]+)'/g)||[]).map(s=>s.replace(/'/g,'')) : [];
   console.log('  白名单: '+listed.join(', '));
-  ck('白名单含全部 7 套（含 sakura 兼容）', listed.length===7, '实际 '+listed.length);
+  ck('白名单含全部 9 套', listed.length===9, '实际 '+listed.length);
   ck('applyTheme 会校验主题', /if\(!VALID_THEMES\.includes\(CFG\.theme\)\)/.test(js));
   ck('校验后回落并写回', /CFG\.theme='keyboard'/.test(js) && /try\{ save\(\); \}/.test(js));
 

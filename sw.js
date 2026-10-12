@@ -11,7 +11,7 @@
    现在：联网时永远拿服务器上的最新代码，同时顺手更新缓存；
         只有断网时才用缓存兜底（离线仍能打开）。
    ========================================================== */
-const CACHE = 'salary-ticker-v4';
+const CACHE = 'salary-ticker-v5';
 const ASSETS = [
   './',
   './index.html',

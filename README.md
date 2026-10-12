@@ -49,6 +49,14 @@ cd salary-ticker && git reset --hard stable-v16
     复位不改 `s/e`、不动 `CFG`/工资/日历、不触发拖动彩蛋。
 - **彩蛋语录 `EGG_QUOTES`**：拖动时间轴触发的独立彩蛋层，和上面四个库互不干扰；
   语录自动轮播/状态切换在 `eggActive` 时不打断彩蛋。
+- **皮肤动态系统（v5，9 套主题）**：
+  - `AMBIENT` 注册表：每套主题一个 `()=>html`，返回氛围层 DOM，由 `rebuildAmbient()` 注入 `#ambient`；
+  - `deriveAppState(today, cur)` → `['work|lunch|off|leave|rest', 'am|noon|pm|none']`，
+    由 `applyAppState()` 写到 `<html data-state data-phase>`，CSS 负责让装饰跟着变；
+  - 微交互：`fxRipple`（涟漪）/ `fxQuoteIn`（语录滑入）/ `fxBurst`（里程碑粒子）；
+  - `fxToggle()` 是动画总开关，存 `localStorage['salary_ticker_fx']`；
+  - **每套主题 ≥ 5 个动态元素**，验收见 `_dev/test-skin.mjs`；
+  - 新增主题只需：`SKINS` 加一项 + `[data-theme="x"]` 基础色块 + `AMBIENT` 加一个工厂函数 + 该主题的 `#ambient` 样式。
 - **版本号 `APP_VER`**：`var` 声明（用 `var` 是为了避免 TDZ 报错），**每次改功能就 +1**。
 
 ## 改完之后必须做的三件事
@@ -64,7 +72,8 @@ cd _dev
 node test.mjs        # 工资计算
 node test-timeline.mjs  # 时间轴真实/显示进度分离（13 条验收 + 非工作日 + 跨天）
 node test-quote.mjs  # 语录四态状态机（19 个时段/场景仿真）
-... 共 15 套，约 817 项断言
+node test-skin.mjs   # 皮肤动态系统（9 主题 × 动态元素 + 红线）
+... 共 16 套，约 881 项断言
 ```
 
 依赖：Node.js 18+（不需要 `npm install`）。测试会从 `../index.html` 里抽取脚本跑逻辑仿真，

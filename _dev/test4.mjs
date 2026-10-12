@@ -116,7 +116,7 @@ console.log('\n【5】皮肤系统（3 新 + 3 旧）');
   ck('有键盘科技皮肤', themes.includes('keyboard'));
   ck('有宇宙星球皮肤', themes.includes('cosmos'));
   ck('有呆猫八条皮肤', themes.includes('cat8'));
-  ck('共 7 套皮肤CSS（含sakura兼容）', themes.length===7, `实际 ${themes.length}`);
+  ck('共 9 套皮肤CSS（7 原有 + 樱花 + 深海 + 霓虹）', themes.length===9, `实际 ${themes.length}`);
   const sk=(js.match(/\{id:'(keyboard|cosmos|cat8|aurora|matrix|sunset)'/g)||[]).length;
   ck('皮肤注册表 6 项', sk===6, `实际 ${sk}`);
   // 键帽质感

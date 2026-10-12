@@ -2,7 +2,7 @@
 import fs from 'fs';
 import vm from 'vm';
 
-const html = fs.readFileSync(new URL('./index.html', import.meta.url), 'utf8');
+const html = fs.readFileSync(new URL('../index.html', import.meta.url), 'utf8');
 const js   = html.split('<script>')[1].split('</script>')[0];
 const style = html.split('<style>')[1].split('</style>')[0];
 
@@ -92,16 +92,15 @@ console.log('\n【2】今天恰好是加班日');
 
 console.log('\n【3】三段时间轴完全独立');
 {
-  const segDecl = js.match(/let tlSeg=\[[\s\S]{0,120}?\];/);
-  ck('数据结构是 3 个对象', segDecl && (segDecl[0].match(/\{s:/g)||[]).length===3,
-     segDecl?segDecl[0].replace(/\s+/g,' '):'未找到');
-  ck('每段有自己的 s/e', /\{s:570, e:720\}/.test(js) && /\{s:780, e:1110\}/.test(js));
+  const segDecl = js.match(/let tlSeg=\[[\s\S]{0,300}?\];/);
+  ck('数据结构是 3 个对象', segDecl && (segDecl[0].match(/\{s:/g)||[]).length===3);
+  ck('每段有自己的 s/e', /\{s:570, e:720,/.test(js) && /\{s:780, e:1110,/.test(js));
   ck('★不再共享 4 个时间点', !/let tlSeg=\[570,720,780,1110\]/.test(js));
-  ck('★只拖右端（单端手柄）', js.includes('seg.e=seg.s+dur;') && !/seg\.s\s*=/.test(js));
+  ck('★单端手柄 + 拖动只改 disp 不动 s/e', !/seg\.e=seg\.s\+dur;/.test(js) && js.includes('seg.disp=f*100'));
   ck('★最短 15 分钟保护', /TL_MIN/.test(js));
   ck('★三段都能拖到底（无跨段限制）', !js.includes('tlSeg[cfg.i+1].s - seg.s'));
   ck('★没有跨段联动', !/s\[1\]=ns; s\[2\]=ns\+len/.test(js));
-  ck('★时长/满格（可拖任意位置）', /tlPct\(seg\)/.test(js) && /TL_SPAN_MAX=720/.test(js));
+  ck('★可停任意位置（0-100% 显示进度）', js.includes('seg.disp=f*100') && !/TL_SPAN_MAX/.test(js));
       ck('最短 15 分钟', /TL_MIN=15/.test(js));
   // HTML：每段两个手柄
   ck('3 个手柄（单端）', (html.match(/class="sb-knob/g)||[]).length===3);

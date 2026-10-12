@@ -1,7 +1,7 @@
 // v13 精简版：引导已删除，只测还存在的功能
 import fs from 'fs';
 
-const html = fs.readFileSync(new URL('./index.html', import.meta.url), 'utf8');
+const html = fs.readFileSync(new URL('../index.html', import.meta.url), 'utf8');
 const js   = html.split('<script>')[1].split('</script>')[0];
 const style= html.split('<style>')[1].split('</style>')[0];
 
@@ -53,7 +53,7 @@ console.log('\n【4】★引导已删除');
 
 console.log('\n【5】★时间轴复位');
 {
-  ck('★每帧校验 tlSeg', /if\(!tlSeg \|\| !tlSeg\[0\] \|\| !tlSeg\[1\] \|\| !tlSeg\[2\]\)/.test(js));
+  ck('★每帧校验 tlSeg', /function tlEnsureToday\(today\)/.test(js) && /tlEnsureToday\(today\);/.test(js));
   ck('★复位有 try/catch', /btnTlReset[\s\S]{0,400}try\{/.test(js));
   ck('★复位出错置 null', js.includes('tlSeg=null;'));
   ck('★renderDragTL null 保护', /if\(!tlSeg\|\|!tlSeg\[0\]\) return;/.test(js));
@@ -64,8 +64,8 @@ console.log('\n【6】★原有功能');
   ck('日薪计算', /const rate = due>0 \? CFG\.salary\/due/.test(js));
   ck('加班费', /CFG\.salary - deduct \+ otPay/.test(js));
   ck('彩蛋语录', /const EGG_QUOTES = \{/.test(js));
-  ck('进度条可拖', js.includes('Math.min(TL_SPAN_MAX, Math.round(f*TL_SPAN_MAX))'));
-  ck('实时效果', /function tlRealPct/.test(js));
+  ck('进度条可拖', js.includes('seg.manual=true;') && js.includes('seg.disp=f*100;'));
+  ck('实时效果', /function calcLivePct\(i, now, today\)/.test(js));
   ck('日历星期对齐', /const WEEK=\['日','一','二','三','四','五','六'\]/.test(js));
   ck('事件委托', /function initYearClick/.test(js) && /function initCalClick/.test(js));
   ck('轮盘', /function openWheel/.test(js));

@@ -2,7 +2,7 @@
 import fs from 'fs';
 import vm from 'vm';
 
-const html = fs.readFileSync(new URL('./index.html', import.meta.url), 'utf8');
+const html = fs.readFileSync(new URL('../index.html', import.meta.url), 'utf8');
 const js = html.split('<script>')[1].split('</script>')[0];
 
 // ——— 极简 DOM 桩 ———

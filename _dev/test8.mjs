@@ -1,7 +1,7 @@
 // v8 测试：日历表头对齐 / 三段独立计时只拖右端 / 段内归一化
 import fs from 'fs';
 
-const html = fs.readFileSync(new URL('./index.html', import.meta.url), 'utf8');
+const html = fs.readFileSync(new URL('../index.html', import.meta.url), 'utf8');
 const js   = html.split('<script>')[1].split('</script>')[0];
 const style = html.split('<style>')[1].split('</style>')[0];
 
@@ -70,12 +70,12 @@ console.log('\n【2】日期格子填充与表头一致性');
 
 console.log('\n【3】三段独立计时（段内归一化）');
 {
-  ck('数据结构 {s,e}', /let tlSeg=\[\s*\{s:570, e:720\}/.test(js));
-  ck('★实时进度分两层（已过+预设）', js.includes('style.width=timePct') && js.includes('style.width=Math.max(0,setPct-timePct)'));
-  ck('★预设层用 left 定位', js.includes("pre'+'ABC'[i]).style.left=timePct"));
+  ck('数据结构 {s,e,live,disp,manual}', /let tlSeg=\[\s*\{s:570, e:720,/.test(js));
+  ck('★实时进度与显示进度分离（live / disp 两个字段）', /seg\.live=calcLivePct\(i, now, today\);/.test(js) && /if\(!seg\.manual\) seg\.disp=seg\.live;/.test(js));
+  ck('★斜纹层同样跟随 displayProgress', js.includes("$('pre'+'ABC'[i]).style.left=p.toFixed(2)+'%'"));
   ck('★不按全天轴换算', !/AXIS_S_V|axPct\(/.test(js));
-  ck('★满格=12小时', /TL_SPAN_MAX=720/.test(js));
-  ck('★手柄位置 = setPct（不再钉死）', js.includes("knb'+'ABC'[i]).style.left=setPct.toFixed(2)"));
+  ck('★轨道 0-100% 归一化（不再用 12 小时跨度）', /const p=Math\.max\(0, Math\.min\(100, seg\.disp\)\);/.test(js) && !/TL_SPAN_MAX/.test(js));
+  ck('★手柄位置 = displayProgress', js.includes("$('knb'+'ABC'[i]).style.left=p.toFixed(2)+'%'"));
 }
 
 console.log('\n【4】只拖右端，不能拖两端');
@@ -83,7 +83,7 @@ console.log('\n【4】只拖右端，不能拖两端');
   ck('★HTML 只有 3 个手柄', (html.match(/class="sb-knob/g)||[]).length===3,
      `实际 ${(html.match(/class="sb-knob/g)||[]).length}`);
   ck('★没有 .sb-knob.l', !/class="sb-knob l"/.test(html));
-  ck('★拖动只改 seg.e', /seg\.e=seg\.s\+dur;/.test(js));
+  ck('★拖动只改 displayProgress', /seg\.manual=true;/.test(js) && /seg\.disp=f\*100;/.test(js) && !/seg\.e=seg\.s\+dur;/.test(js));
   ck('★不碰 seg.s', !/seg\.s\s*=/.test(js));
   ck('★手柄固定 left:100%', /\.sb-knob\.r\{[\s\S]{0,120}left:100%/.test(style));
   ck('★光标是 ew-resize（横向）', /cursor:ew-resize/.test(style));
@@ -103,10 +103,10 @@ console.log('\n【5】前方无黑色块');
 console.log('\n【6】今日整体（午休时仍在增长）');
 {
   ck('整体从上班时间算起', /const os=tlSeg\[0\]\.s, oe=tlSeg\[2\]\.e/.test(js));
-  ck('★整体不扣午休', /const oPct=Math\.max\(0,Math\.min\(1,\(now-os\)\/oSpan\)\)\*100/.test(js));
+  ck('★整体条受工作日门禁', /const oPct=workday\?Math\.max\(0,Math\.min\(1,\(now-os\)\/oSpan\)\)\*100:0;/.test(js));
   ck('★说明显示净工时/午休/已上', /净工作/.test(js)&&/午休/.test(js)&&/当前已上/.test(js));
   ck('区分「净工作」与「已上」', /净工作/.test(js)&&/当前已上/.test(js));
-  ck('净工作扣掉午休', /now>tlSeg\[1\]\.s&&now<tlSeg\[1\]\.e \? \(now-tlSeg\[1\]\.s\)/.test(js));
+  ck('净工作扣掉午休', /if\(workday && now>tlSeg\[1\]\.e\)\{[\s\S]{0,120}workedNow \+= Math\.min\(now, oe\) - tlSeg\[1\]\.e;/.test(js));
 }
 
 console.log('\n【7】实时更新');

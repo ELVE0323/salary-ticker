@@ -1,7 +1,7 @@
 // 真机模拟：引导页两条路径（A 填完提交 / B 点叉跳过）
 import fs from 'fs';
 
-const html = fs.readFileSync(new URL('./index.html', import.meta.url), 'utf8');
+const html = fs.readFileSync(new URL('../index.html', import.meta.url), 'utf8');
 const js   = html.split('<script>')[1].split('</script>')[0];
 
 const store={}, nodes={}, errors=[];

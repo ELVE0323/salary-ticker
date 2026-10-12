@@ -1,6 +1,6 @@
 // 实测：四个复位按钮
 import fs from 'fs';
-const html = fs.readFileSync(new URL('./index.html', import.meta.url), 'utf8');
+const html = fs.readFileSync(new URL('../index.html', import.meta.url), 'utf8');
 const js   = html.split('<script>')[1].split('</script>')[0];
 
 const store={}, nodes={}, errors=[];

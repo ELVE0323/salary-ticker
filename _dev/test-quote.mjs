@@ -1,6 +1,6 @@
 // 语录状态机（v2）测试：上班 / 正常 / 下班 / 放假 四态
 import fs from 'fs';
-const html = fs.readFileSync(new URL('./index.html', import.meta.url), 'utf8');
+const html = fs.readFileSync(new URL('../index.html', import.meta.url), 'utf8');
 const js = html.split(/<script>([\s\S]*)<\/script>/)[1];
 
 let pass = 0, fail = 0;
@@ -43,7 +43,7 @@ ok('不再使用旧的 off/work 二分', !js.includes("kind==='off' ? randomOffQ
 
 console.log('\n【5】状态切换自动换句');
 ok('render 里用 getQuoteMode', js.includes('const mode=getQuoteMode(now);'));
-ok('状态变化时 pickQuote(mode)', /if\(mode!==_quoteKind && _quoteText\)\{ pickQuote\(mode\); \}/.test(js));
+ok('状态变化时 pickQuote(mode)', /else if\(mode!==_quoteKind && _quoteText\)\{\s*pickQuote\(mode\);/.test(js));
 
 // ---- 逻辑仿真：抽出 getQuoteMode 主体，用桩函数跑 ----
 console.log('\n【6】状态判定逻辑仿真');

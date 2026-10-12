@@ -1,7 +1,7 @@
 // v10 测试：分享安全 / 出厂默认值 / 首次引导 / 一键清空
 import fs from 'fs';
 
-const html = fs.readFileSync(new URL('./index.html', import.meta.url), 'utf8');
+const html = fs.readFileSync(new URL('../index.html', import.meta.url), 'utf8');
 const js   = html.split('<script>')[1].split('</script>')[0];
 const style= html.split('<style>')[1].split('</style>')[0];
 

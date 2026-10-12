@@ -1,7 +1,7 @@
 // 用 node 模拟 DOM，检查 render() 全流程无异常 + 各皮肤 CSS 变量齐全
 import fs from 'fs';
 
-const html = fs.readFileSync(new URL('./index.html', import.meta.url), 'utf8');
+const html = fs.readFileSync(new URL('../index.html', import.meta.url), 'utf8');
 const js = html.split('<script>')[1].split('</script>')[0];
 
 // —— 极简 DOM 桩 ——

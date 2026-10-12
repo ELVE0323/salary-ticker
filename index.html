@@ -580,7 +580,6 @@ body::before{
 .ph h3{margin:0;font-size:16px;font-weight:700}
 .x{border:none;background:var(--btn);color:var(--txt2);width:33px;height:33px;border-radius:10px;cursor:pointer;font-size:15px;transition:.15s;position:relative;z-index:3;flex:none}
 .x:hover{background:var(--btn-h);color:var(--bad);transform:scale(1.08)}
-.x:hover{background:var(--btn-h);color:var(--txt)}
 .field{margin-bottom:17px}
 .field>label{display:block;font-size:11.5px;color:var(--txt2);margin-bottom:8px;letter-spacing:.4px;font-weight:600}
 .field input{width:100%;background:var(--surface);border:1px solid var(--stroke);border-radius:11px;padding:12px 13px;
@@ -923,6 +922,17 @@ body::before{
     rgba(255,255,255,.5) 0 4px, transparent 4px 9px);
 }
 .sb-foot{display:flex;justify-content:space-between;align-items:center;font-size:10.5px;color:var(--txt3);margin-top:7px;gap:8px}
+/* 进度百分比文字：始终与滑块/填充同一数据源 displayProgress */
+.sb-pct{
+  flex:none;min-width:36px;text-align:right;
+  font-size:11px;font-weight:700;color:var(--acc);
+  font-variant-numeric:tabular-nums;-moz-font-variant-numeric:tabular-nums
+}
+/* 手动交互中：该段由用户接管，与实时进度脱钩 */
+.segbar.hand .sb-pct{color:var(--warn)}
+.segbar.hand .sb-track.seg{border-color:color-mix(in srgb,var(--warn) 55%,transparent)}
+.segbar.hand .sb-name{color:var(--warn)}
+.segbar.rest .sb-pct{color:var(--txt3)}
 .sb-grip{color:var(--acc);opacity:.6;font-weight:700;flex:none;font-size:10px}
 .sb-grip.readonly{color:var(--txt3);opacity:.5}
 .segbar.overall{background:var(--surface);border-style:dashed}
@@ -1093,7 +1103,7 @@ body::before{
           <div class="sb-pre" id="preA"></div>
           <div class="sb-knob r" id="knbA"><i></i></div>
         </div>
-        <div class="sb-foot"><span id="txtA">—</span><span class="sb-grip">拖右端 ▶</span></div>
+        <div class="sb-foot"><span id="txtA">—</span><span class="sb-pct" id="pctA">0%</span><span class="sb-grip">拖动 ▶</span></div>
       </div>
 
       <div class="segbar" id="segB">
@@ -1106,7 +1116,7 @@ body::before{
           <div class="sb-pre rest" id="preB"></div>
           <div class="sb-knob r" id="knbB"><i></i></div>
         </div>
-        <div class="sb-foot"><span id="txtB">—</span><span class="sb-grip">拖右端 ▶</span></div>
+        <div class="sb-foot"><span id="txtB">—</span><span class="sb-pct" id="pctB">0%</span><span class="sb-grip">拖动 ▶</span></div>
       </div>
 
       <div class="segbar" id="segC">
@@ -1119,7 +1129,7 @@ body::before{
           <div class="sb-pre" id="preC"></div>
           <div class="sb-knob r" id="knbC"><i></i></div>
         </div>
-        <div class="sb-foot"><span id="txtC">—</span><span class="sb-grip">拖右端 ▶</span></div>
+        <div class="sb-foot"><span id="txtC">—</span><span class="sb-pct" id="pctC">0%</span><span class="sb-grip">拖动 ▶</span></div>
       </div>
     </div>
 
@@ -2217,7 +2227,7 @@ function monthCalc(y,m,now){
     if(viewingFuture){ futureWorkDays++; continue; }           // 查看未来：一分未赚
     // 当前月：按今天在月中的位置切分
     if(it.k<tk){ earned+=pay; workedDays++; }
-    else if(it.k===tk){ earned+= it.isOT ? Math.min(pay, tEarned*CFG.otRate*(CFG.otRate||2)) : tEarned; workedDays++; }
+    else if(it.k===tk){ earned+= it.isOT ? tEarned : Math.min(pay, tEarned); workedDays++; }
     else futureWorkDays++;
   }
 
@@ -2703,28 +2713,55 @@ let CUR_T={tEarnedLive:0,tRateFull:1}, CUR_M={mEarned:0,mFinal:1};
 /* ==========================================================
    七、可拖动时间轴（三段独立，尾端可拖到任意位置）
    ========================================================== */
-/* 每段独立存 {s,e}：s 固定起点，e 可拖。
-   ★★ 关键设计：手柄位置 = 该段时长 / TL_SPAN_MAX（轨道满格 = 12 小时）
-      渲染和拖动用同一个 pct，所以"拖到哪就停在哪"，不会自己跳。
+/* 每段独立存 {s,e,manual,disp}：s/e 固定真实时间，manual 标记是否被拖动覆盖，disp 是显示进度 0-100。
+   ★★ 关键设计：每段轨道独立 0%-100%，fill 随真实时间从 0% 增长到 100%
+      拖动时只改变 disp 显示进度，绝不修改真实 s/e。
       轨道起点就是该段的开始时刻，因此左边不会有黑条。 */
 let tlSeg=[
-  {s:570, e:720},     // 0=上午上班
-  {s:720, e:780},     // 1=午休
-  {s:780, e:1110}     // 2=下午上班
+  {s:570, e:720, manual:false, disp:0, live:0},   // 0=上午上班
+  {s:720, e:780, manual:false, disp:0, live:0},   // 1=午休
+  {s:780, e:1110,manual:false, disp:0, live:0}    // 2=下午上班
 ];
 let tlInit=false, tlDragging=false;
-const TL_MIN=15, TL_MAXM=1439;
-const TL_SPAN_MAX=720;                // 轨道满格代表 12 小时
-/** 该段占轨道的百分比（按用户设置的时长） */
-function tlPct(seg){ return Math.max(0,Math.min(1,(seg.e-seg.s)/TL_SPAN_MAX)); }
-/** ★ 实时百分比 = max(时间已过的比例, 手动设置的比例)
-    效果：上午过完自动满格、午休结束自动满格；
-         之后用户还能继续往后拖，条保持满、下方时间数字继续增长。 */
-function tlRealPct(seg, now){
-  const setPct=tlPct(seg);
-  const dur=Math.max(1, seg.e-seg.s);
-  const timePct=Math.max(0, Math.min(1,(now-seg.s)/dur));
-  return Math.max(setPct, timePct);
+let lastSeenDate='';
+let TL_TODAY=null;                 // render() 每帧写入的 today，时间轴复用同一套时间口径
+const TL_MIN=15;                   // 最短段时长（分钟）
+
+/** 今天是否是需要计时的工作日：tStatus 1=上班 3=半天假 */
+function tlIsWorkday(today){
+  return !!today && (today.tStatus===1 || today.tStatus===3);
+}
+/** 用 today 的真实工作时段重建三段（跳天 / 配置变更时调用） */
+function tlSegFromToday(t){
+  return [
+    {s:t.WS,e:t.LS,manual:false,disp:0,live:0},
+    {s:t.LS,e:t.LE,manual:false,disp:0,live:0},
+    {s:t.LE,e:t.WE,manual:false,disp:0,live:0}
+  ];
+}
+/** 每帧校验：跳天或配置变了就重建，并清掉上一工作日残留的手动覆盖 */
+function tlEnsureToday(today){
+  if(!today) return;
+  const k=ymd(new Date());
+  const stale = !tlSeg || !tlSeg[0] || !tlSeg[1] || !tlSeg[2]
+    || tlSeg[0].s!==today.WS || tlSeg[0].e!==today.LS
+    || tlSeg[1].s!==today.LS || tlSeg[1].e!==today.LE
+    || tlSeg[2].s!==today.LE || tlSeg[2].e!==today.WE;
+  if(k!==lastSeenDate || stale){
+    lastSeenDate=k;
+    tlSeg=tlSegFromToday(today);
+  }
+}
+/** 单段实时基础进度 liveProgress（0-100），非工作日恒为 0 */
+function calcLivePct(i, now, today){
+  const seg=tlSeg && tlSeg[i];
+  if(!seg) return 0;
+  if(!tlIsWorkday(today)) return 0;                  // 非工作日不计时
+  if(now<=seg.s) return 0;
+  if(now>=seg.e) return 100;
+  const dur=seg.e-seg.s;
+  if(dur<=0) return 100;
+  return Math.max(0, Math.min(100, (now-seg.s)/dur*100));
 }
 
 function initDragTL(){
@@ -2737,16 +2774,14 @@ function initDragTL(){
     const trk=$(cfg.trk), knob=$(cfg.knob), bar=trk.closest('.segbar');
     let dragging=false, moved=false;
 
-    // ★ 位置 → 时长：直接把鼠标位置换算成"这段有多长"，与渲染完全对称
-    // ★ 不再限制"不侵入下一段" —— 三段互相独立，都可以一直拖到满格(12h)
+    // ★ 拖动直接控制显示进度 disp：轨道 0-100% 代表该段显示进度
     const apply=e=>{
       const r=trk.getBoundingClientRect();
       const x=(e.touches?e.touches[0].clientX:e.clientX);
-      const f=Math.max(0,Math.min(1,(x-r.left)/Math.max(1,r.width)));
+      const f=Math.max(0, Math.min(1, (x-r.left)/Math.max(1,r.width)));
       const seg=tlSeg[cfg.i];
-      // 唯一约束：不超过 12 小时（轨道满格）
-      const dur=Math.max(TL_MIN, Math.min(TL_SPAN_MAX, Math.round(f*TL_SPAN_MAX)));
-      seg.e=seg.s+dur;
+      seg.manual=true;
+      seg.disp=f*100;
       renderDragTL();
     };
     const onDown=e=>{
@@ -2777,55 +2812,31 @@ function initDragTL(){
     window.addEventListener('touchend',onUp);
   });
 
-  // —— 分段复位：每段单独恢复到「设置」里的真实时间 ——
-  function resetSegs(){
-    return {
-      a: {s:minOf(CFG.start),  e:minOf(CFG.lunch1)},
-      b: {s:minOf(CFG.lunch1), e:minOf(CFG.lunch2)},
-      c: {s:minOf(CFG.lunch2), e:minOf(CFG.end)},
-    };
-  }
-  const DEF_SEGS=resetSegs();
+  // —— 单条复位：只退出这一条的 manual，disp 同步到最新 live ——
+  // 不动其他两条、不改配置、不改工资、不触发彩蛋
+  const resetOne=(i,label)=>{
+    try{
+      if(!tlSeg||!tlSeg[i]) return;
+      tlSeg[i].manual=false;
+      tlSeg[i].disp=tlSeg[i].live;      // 最新实时基础进度
+      renderDragTL();
+      toast(`${label}已复位 · 实时进度 ${Math.round(tlSeg[i].live)}%`);
+    }catch(e){ tlSeg=null; toast(label+'复位出错，已重置'); }
+  };
+  $('btnResetUp').addEventListener('click',()=>resetOne(0,'上班'));
+  $('btnResetNoon').addEventListener('click',()=>resetOne(1,'午休'));
+  $('btnResetDown').addEventListener('click',()=>resetOne(2,'下班'));
 
-  // 上班复位：上午段回到「上班 → 午休开始」
-  $('btnResetUp').addEventListener('click',()=>{
-    try{
-      const d=resetSegs();
-      tlSeg[0]={s:d.a.s, e:d.a.e};
-      tlSeg[1]={s:d.b.s, e:d.b.e};      // 午休起点跟着对齐
-      renderDragTL();
-      toast(`上班 ${hhmm(d.a.s)} → 午休 ${hhmm(d.a.e)}`);
-    }catch(e){ tlSeg=null; toast('上班复位出错，已重置'); }
-  });
-  // 午休复位：午休段回到「午休开始 → 午休结束」
-  $('btnResetNoon').addEventListener('click',()=>{
-    try{
-      const d=resetSegs();
-      tlSeg[1]={s:d.b.s, e:d.b.e};
-      tlSeg[0]={s:tlSeg[0].s, e:d.b.s};  // 上午终点对齐午休起点
-      tlSeg[2]={s:d.b.e, e:tlSeg[2].e};  // 下午起点对齐午休终点
-      renderDragTL();
-      toast(`午休 ${hhmm(d.b.s)} → ${hhmm(d.b.e)}`);
-    }catch(e){ tlSeg=null; toast('午休复位出错，已重置'); }
-  });
-  // 下班复位：下午段回到「午休结束 → 下班」
-  $('btnResetDown').addEventListener('click',()=>{
-    try{
-      const d=resetSegs();
-      tlSeg[2]={s:d.c.s, e:d.c.e};
-      tlSeg[1]={s:tlSeg[1].s, e:d.c.s};  // 午休终点对齐下午起点
-      renderDragTL();
-      toast(`下午 ${hhmm(d.c.s)} → 下班 ${hhmm(d.c.e)}`);
-    }catch(e){ tlSeg=null; toast('下班复位出错，已重置'); }
-  });
-  // 全部复位
+  // —— 全部复位：三条都退出手动，分别同步到各自最新 live ——
   $('btnTlReset').addEventListener('click',()=>{
     try{
-      const d=resetSegs();
-      tlSeg=[{s:d.a.s,e:d.a.e},{s:d.b.s,e:d.b.e},{s:d.c.s,e:d.c.e}];
+      if(!tlSeg||!tlSeg[0]||!tlSeg[1]||!tlSeg[2]){
+        tlSeg=tlSegFromToday(TL_TODAY||{WS:570,LS:720,LE:780,WE:1110});
+      }
+      tlSeg.forEach(s=>{ s.manual=false; s.disp=s.live; });
       renderDragTL();
-      eggReset();
-      toast(`已复位：上班 ${hhmm(d.a.s)} · 午休 ${hhmm(d.b.s)}-${hhmm(d.b.e)} · 下班 ${hhmm(d.c.e)}`);
+      const [a,b,c]=tlSeg.map(s=>Math.round(s.live));
+      toast(`已复位 · 上班 ${a}% ／ 午休 ${b}% ／ 下班 ${c}%`);
     }catch(err){
       tlSeg=null;
       toast('复位时出错，已重置为默认时段');
@@ -2843,46 +2854,65 @@ function tlTotalWork(){
 function renderDragTL(){
   if(!tlSeg||!tlSeg[0]) return;
   const now=curNow();
+  const today=TL_TODAY;
+  const workday=tlIsWorkday(today);
 
   for(let i=0;i<3;i++){
     const seg=tlSeg[i];
     const isRest=(i===1);
-    // 已过比例（按当前时间）
-    const timePct=Math.max(0,Math.min(1,(now-seg.s)/Math.max(1,seg.e-seg.s)))*100;
-    // 预设比例（按这段的总时长）
-    const setPct=Math.max(0,Math.min(1,(seg.e-seg.s)/TL_SPAN_MAX))*100;
-    // 实心 = 已过；斜纹 = 预设的未来部分
-    $('fil'+'ABC'[i]).style.width=timePct.toFixed(2)+'%';
-    $('pre'+'ABC'[i]).style.left=timePct.toFixed(2)+'%';
-    $('pre'+'ABC'[i]).style.width=Math.max(0,setPct-timePct).toFixed(2)+'%';
-    $('knb'+'ABC'[i]).style.left=setPct.toFixed(2)+'%';
+    // 1) liveProgress：按真实时间每帧重算，手动状态也照算不停
+    seg.live=calcLivePct(i, now, today);
+    // 2) displayProgress：未手动跟随 live；手动则保持用户位置
+    if(!seg.manual) seg.disp=seg.live;
+    const p=Math.max(0, Math.min(100, seg.disp));
+
+    // 3) 滑块 / 填充 / 斜纹 / 百分比文字 —— 全部用同一个 p（displayProgress）
+    $('fil'+'ABC'[i]).style.width=p.toFixed(2)+'%';
+    $('pre'+'ABC'[i]).style.left=p.toFixed(2)+'%';
+    $('pre'+'ABC'[i]).style.width=Math.max(0,100-p).toFixed(2)+'%';
+    $('knb'+'ABC'[i]).style.left=p.toFixed(2)+'%';
     $('tl'+'ABC'[i]+'1').textContent=hhmm(seg.s);
     $('tl'+'ABC'[i]+'2').textContent=hhmm(seg.e);
+    const pctEl=$('pct'+'ABC'[i]);
+    if(pctEl) pctEl.textContent=p.toFixed(0)+'%';
     $('td'+i).className='tl-dot'+((now>=seg.s&&!isRest)?' on':'')+(isRest&&now>=seg.s?' rest':'');
     $('seg'+'ABC'[i]).classList.toggle('now', now>=seg.s && now<=seg.e);
     $('seg'+'ABC'[i]).classList.toggle('done', now>seg.e);
+    $('seg'+'ABC'[i]).classList.toggle('hand', !!seg.manual);
+    $('seg'+'ABC'[i]).classList.toggle('rest', !workday);
   }
   const d0=tlSeg[0].e-tlSeg[0].s, d1=tlSeg[1].e-tlSeg[1].s, d2=tlSeg[2].e-tlSeg[2].s;
-  $('txtA').innerHTML = now<tlSeg[0].s ? `距上班 <b style="color:var(--ok)">${fmtDur(tlSeg[0].s-now)}</b>`
+  $('txtA').innerHTML = !workday ? '休息日 · 不计时'
+    : now<tlSeg[0].s ? `距上班 <b style="color:var(--ok)">${fmtDur(tlSeg[0].s-now)}</b>`
     : now<tlSeg[0].e ? `已上 <b style="color:var(--ok)">${fmtDur(now-tlSeg[0].s)}</b> · 还剩 ${fmtDur(tlSeg[0].e-now)}`
     : `<b style="color:var(--bad)">已超时 ${fmtDur(now-tlSeg[0].e)}</b> · 设置 ${fmtDur(d0)}`;
-  $('txtB').textContent = now<tlSeg[1].s ? '未开始'
+  $('txtB').textContent = !workday ? '休息日 · 不计时'
+    : now<tlSeg[1].s ? '未开始'
     : now<tlSeg[1].e ? `休息中 · 还剩 ${fmtDur(tlSeg[1].e-now)}`
     : `共 ${fmtDur(d1)}${now>tlSeg[1].e?` · <span style="color:var(--bad)">超时 ${fmtDur(now-tlSeg[1].e)}</span>`:''}`;
-  $('txtC').innerHTML = now<tlSeg[2].s ? '未开始'
+  $('txtC').innerHTML = !workday ? '休息日 · 不计时'
+    : now<tlSeg[2].s ? '未开始'
     : now<tlSeg[2].e ? `已上 <b style="color:var(--ok)">${fmtDur(now-tlSeg[2].s)}</b> · 还剩 ${fmtDur(tlSeg[2].e-now)}`
     : (now>tlSeg[2].e
         ? `<b style="color:var(--bad)">已超时 ${fmtDur(now-tlSeg[2].e)}</b> · 设置 ${fmtDur(d2)}`
         : `已完成 <b style="color:var(--ok)">${fmtDur(d2)}</b>`);
 
-  // 今日整体：从上班时间到下班时间
+  // 今日整体（只读）：同样受工作日门禁，非工作日不推进
   const os=tlSeg[0].s, oe=tlSeg[2].e;
   const oSpan=Math.max(1, oe-os);
-  const oPct=Math.max(0,Math.min(1,(now-os)/oSpan))*100;
+  const oPct=workday?Math.max(0,Math.min(1,(now-os)/oSpan))*100:0;
   $('filO').style.width=oPct.toFixed(2)+'%';
   $('txtO').textContent=`${hhmm(os)} → ${hhmm(oe)}`;
   const restM=Math.max(0,tlSeg[1].e-tlSeg[1].s);
-  const workedNow=Math.max(0, Math.min(oe,now)-os) - (now>tlSeg[1].s&&now<tlSeg[1].e ? (now-tlSeg[1].s) : 0);
+  // 正确计算已工作时长：上午段 + 下午段，扣除午休
+  let workedNow=0;
+  if(workday && now>os){
+    workedNow += Math.min(now, tlSeg[0].e) - os;           // 上午
+  }
+  if(workday && now>tlSeg[1].e){
+    workedNow += Math.min(now, oe) - tlSeg[1].e;           // 下午
+  }
+  workedNow = Math.max(0, workedNow);
   const total=tlTotalWork();
   $('txtON').innerHTML=
     `净工作 <b style="color:var(--acc)">${(total/60).toFixed(2)} h</b>　`+
@@ -2890,7 +2920,7 @@ function renderDragTL(){
     `当前已上 <b style="color:var(--ok)">${(workedNow/60).toFixed(1)} h</b>`;
 
   // ★ 超时检测：时间已过某段设置值但条还没满 → 触发彩蛋（5 分钟内不重复）
-  if(!tlDragging && !eggOverLock){
+  if(workday && !tlDragging && !eggOverLock){
     if((now>tlSeg[0].e+1) || (now>tlSeg[2].e+1)){
       eggOverLock=true;
       eggCheckOver();
@@ -3095,7 +3125,7 @@ function firstRunHint(){
 
 /* ==========================================================
    PWA 更新逻辑 ===== */
-var APP_VER='v15';                         // ★每次改动功能就 +1（用 var 避免 TDZ 报错）
+var APP_VER='16';                         // ★每次改动功能就 +1（用 var 避免 TDZ 报错）
 function showVer(){
   const b=$('btnVer');
   if(b) b.textContent='v'+APP_VER;
@@ -3229,11 +3259,10 @@ function render(){
   $('cState').style.color = (today.tStatus===0||today.tStatus===2||today.tStatus===3) ? 'var(--txt2)' : 'var(--ok)';
   $('cStateS').textContent=lss;
 
-  // ★三段独立时间轴：每帧都校验 tlSeg 有效性，失效就重建（修复复位无效）
+  // ★三段独立时间轴：写入 today 复用同一套时间口径；跨天 / 配置变更时重建
   if(!tlInit){ tlInit=true; initDragTL(); }
-  if(!tlSeg || !tlSeg[0] || !tlSeg[1] || !tlSeg[2]){
-    tlSeg=[{s:today.WS,e:today.LS},{s:today.LS,e:today.LE},{s:today.LE,e:today.WE}];
-  }
+  TL_TODAY=today;
+  tlEnsureToday(today);
   renderDragTL();
 
   // 本月
@@ -3299,9 +3328,15 @@ function render(){
   if(CFG.theme==='cat8') updateCat8(catMood(today.tStatus));
 
   // 语录：状态（时段 / 日历）切换时自动换一次
+  // ★彩蛋态（刚拖动完时间轴）不被自动轮播 / 状态切换覆盖
   const mode=getQuoteMode(now);
-  if(mode!==_quoteKind && _quoteText){ pickQuote(mode); }
-  if(!_quoteText) pickQuote(mode);
+  if(eggActive){
+    // 保持彩蛋，不动普通语录库
+  }else if(mode!==_quoteKind && _quoteText){
+    pickQuote(mode);
+  }else if(!_quoteText){
+    pickQuote(mode);
+  }
 
   renderYear(y,now);
 }

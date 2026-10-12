@@ -23,8 +23,18 @@
 - **语录状态机 `getQuoteMode(now)`**：返回 `hol` / `start` / `normal` / `off`，
   四个库分别是 `Q_HOL`（放假）/ `Q_START`（上班后2小时）/ `Q_NORMAL`（上班满2小时到下班）/ `Q_OFF`（下班后到次日上班前）。
   放假语录跟日历状态强绑定，改日历逻辑时这里要一起看。
-- **彩蛋语录 `EGG_QUOTES`**：拖动时间轴触发的独立彩蛋层，和上面四个库互不干扰。
-- **时间轴 `tlSeg` / `resetSegs()`**：上午 / 午休 / 下午三段，可拖动，各自有复位按钮。
+- **时间轴 `tlSeg`（每段 `{s,e,manual,disp,live}`）**：
+  - `s/e` 真实工作时间（分钟），只来自 `CFG`，拖动绝不修改；
+  - `live` = **liveProgress**，`calcLivePct(i, now, today)` 每帧按真实时间算（手动状态也照算）；
+  - `disp` = **displayProgress**，页面实际显示的进度；
+  - `manual=false` 时 `disp` 恒等于 `live`；`manual=true` 时 `disp` 由用户拖动控制，`live` 只算不覆盖；
+  - **非工作日**（`today.tStatus` 为 0 或 2）三条 `live` 全 0；
+  - `tlEnsureToday(today)` 每帧校验，跨天 / 配置变更自动重建并清掉上一工作日残留的 `manual`；
+  - **所有视觉元素统一用 `disp`**：滑块 left、填充 width、斜纹、百分比文字 `pctA/B/C`；
+  - **复位语义**：单条只清该段 `manual` 并把 `disp` 同步到该段最新 `live`；全部复位三段都同步。
+    复位不改 `s/e`、不动 `CFG`/工资/日历、不触发拖动彩蛋。
+- **彩蛋语录 `EGG_QUOTES`**：拖动时间轴触发的独立彩蛋层，和上面四个库互不干扰；
+  语录自动轮播/状态切换在 `eggActive` 时不打断彩蛋。
 - **版本号 `APP_VER`**：`var` 声明（用 `var` 是为了避免 TDZ 报错），**每次改功能就 +1**。
 
 ## 改完之后必须做的三件事
@@ -38,9 +48,9 @@
 ```bash
 cd _dev
 node test.mjs        # 工资计算
-node test4.mjs       # 时间轴
+node test-timeline.mjs  # 时间轴真实/显示进度分离（13 条验收 + 非工作日 + 跨天）
 node test-quote.mjs  # 语录四态状态机（19 个时段/场景仿真）
-... 共 14 套，约 806 项断言
+... 共 15 套，约 817 项断言
 ```
 
 依赖：Node.js 18+（不需要 `npm install`）。测试会从 `../index.html` 里抽取脚本跑逻辑仿真，

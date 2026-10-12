@@ -1,7 +1,7 @@
 // v11 精简版：只测还在的功能（引导已删除）
 import fs from 'fs';
 
-const html = fs.readFileSync(new URL('./index.html', import.meta.url), 'utf8');
+const html = fs.readFileSync(new URL('../index.html', import.meta.url), 'utf8');
 const js   = html.split('<script>')[1].split('</script>')[0];
 const style= html.split('<style>')[1].split('</style>')[0];
 
@@ -35,14 +35,14 @@ console.log('\n【3】时间轴可拖动 + 复位');
 {
   ck('单端手柄 3 个', (html.match(/class="sb-knob r"/g)||[]).length===3);
   ck('三段各��� track', /id="trkA"/.test(html)&&/id="trkB"/.test(html)&&/id="trkC"/.test(html));
-  ck('位置直接换算时长', js.includes('Math.min(TL_SPAN_MAX, Math.round(f*TL_SPAN_MAX))'));
+  ck('位置直接映射为显示进度', js.includes('seg.disp=f*100') && !/TL_SPAN_MAX/.test(js));
   ck('★三段都能拖到底（无跨段限制）', !js.includes('tlSeg[cfg.i+1].s - seg.s'));
-  ck('★实时效果 max(已过, 设置)', /function tlRealPct\(seg, now\)/.test(js) && js.includes('Math.max(setPct, timePct)'));
-  ck('★每帧校验 tlSeg（修复复位无效）', /if\(!tlSeg \|\| !tlSeg\[0\] \|\| !tlSeg\[1\] \|\| !tlSeg\[2\]\)/.test(js));
+  ck('★实时效果 = 真实时间算出的 liveProgress', /function calcLivePct\(i, now, today\)/.test(js) && /seg\.live=calcLivePct\(i, now, today\);/.test(js));
+  ck('★每帧校验 tlSeg（跨天/配置变更重建）', /function tlEnsureToday\(today\)/.test(js) && /tlEnsureToday\(today\);/.test(js));
   ck('★复位有 try/catch 兜底', /btnTlReset[\s\S]{0,400}try\{/.test(js));
   ck('★复位出错置 null 让下一帧重建', js.includes('tlSeg=null;'));
   ck('renderDragTL 有 null 保护', /if\(!tlSeg\|\|!tlSeg\[0\]\) return;/.test(js));
-  ck('★拖动后不残留非法值', /TL_SPAN_MAX\)/.test(js));
+  ck('★disp 恒被 clamp 到 0-100', /const p=Math\.max\(0, Math\.min\(100, seg\.disp\)\);/.test(js));
 }
 
 console.log('\n【4】加班费独立结算');

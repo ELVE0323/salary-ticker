@@ -1,7 +1,7 @@
 // v18 验证：没有强制弹窗 / 复位按钮有效 / 设置可改
 import fs from 'fs';
 
-const html = fs.readFileSync(new URL('./index.html', import.meta.url), 'utf8');
+const html = fs.readFileSync(new URL('../index.html', import.meta.url), 'utf8');
 const js   = html.split('<script>')[1].split('</script>')[0];
 const style= html.split('<style>')[1].split('</style>')[0];
 
@@ -32,23 +32,23 @@ console.log('\n【1】★强制引导已彻底移除');
 console.log('\n【2】★三轴复位按钮有效');
 {
   ck('btnTlReset 在 HTML 里', /id="btnTlReset"/.test(html));
-  const rst=js.match(/\$\('btnTlReset'\)\.addEventListener\('click',[\s\S]{0,600}?\}\);/);
+  const rst=js.match(/\$\('btnTlReset'\)\.addEventListener\('click',[\s\S]{0,3000}?\n  \}\);/);
   ck('有 click 绑定', !!rst);
   if(rst){
     const c=rst[0];
     console.log('  复位逻辑:');
     c.split('\n').slice(0,14).forEach(l=>console.log('    '+l.trim().slice(0,82)));
     console.log('');
-    ck('★重置 tlSeg 为三段', c.includes('tlSeg=[{s:d.a.s,e:d.a.e},{s:d.b.s,e:d.b.e},{s:d.c.s,e:d.c.e}]'));
-  ck('★用 CFG 里的配置', js.includes('function resetSegs()') && js.includes('minOf(CFG.start)') && js.includes('minOf(CFG.lunch2)'));
-    ck('★调用 renderDragTL', c.includes('renderDragTL()'));
-    ck('★重置彩蛋计数', c.includes('eggReset()'));
+    ck('★三条都退出 manual 并同步 live', c.includes('tlSeg.forEach(s=>{ s.manual=false; s.disp=s.live; });'));
+  ck('★s/e 来自 today 的真实工作时段', js.includes('function tlSegFromToday(t)') && /t\.WS/.test(js) && /t\.WE/.test(js));
+    ck('★调用 renderDragTL', c.includes('renderDragTL();'));
+    ck('★复位不触发拖动彩蛋（不再调 eggReset）', !c.includes('eggReset()'));
     ck('★有 try/catch 兜底', c.includes('try{'));
     ck('★出错时置 tlSeg=null（下一帧会重建）', c.includes('tlSeg=null;'));
   }
   // render 里每帧校验 tlSeg
   const rd=js.match(/function render\(\)\{[\s\S]{0,6000}?renderDragTL\(\);/);
-  ck('★render 里每帧校验 tlSeg', rd && /if\(!tlSeg \|\| !tlSeg\[0\]/.test(rd[0]));
+  ck('★render 里每帧写入 today 并校验', rd && /TL_TODAY=today;/.test(rd[0]) && /tlEnsureToday\(today\);/.test(rd[0]));
   ck('★renderDragTL 有 null 保护', /if\(!tlSeg\|\|!tlSeg\[0\]\) return;/.test(js));
   ck('★eggReset 存在', /function eggReset\(\)/.test(js));
 }
@@ -81,7 +81,7 @@ console.log('\n【5】原有功能未破坏');
   ck('日薪计算仍在', /const rate = due>0 \? CFG\.salary\/due/.test(js));
   ck('加班费仍在', /const finalPay=CFG\.salary - deduct \+ otPay/.test(js));
   ck('彩蛋语录库仍在', /const EGG_QUOTES = \{/.test(js));
-  ck('进度条实时效果仍在', /function tlRealPct\(seg, now\)/.test(js));
+  ck('进度条实时效果仍在', /function calcLivePct\(i, now, today\)/.test(js) && /function renderDragTL/.test(js));
   ck('三段都能拖到底', !js.includes('tlSeg[cfg.i+1].s - seg.s'));
   ck('日历星期修正仍在', /const WEEK=\['日','一','二','三','四','五','六'\]/.test(js));
   ck('事件委托仍在', /function initYearClick/.test(js));

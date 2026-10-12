@@ -2,7 +2,7 @@
 import fs from 'fs';
 import vm from 'vm';
 
-const html = fs.readFileSync(new URL('./index.html', import.meta.url), 'utf8');
+const html = fs.readFileSync(new URL('../index.html', import.meta.url), 'utf8');
 const js   = html.split('<script>')[1].split('</script>')[0];
 const style = html.split('<style>')[1].split('</style>')[0];
 
@@ -157,12 +157,12 @@ const segbars=(html.split('<script>')[0].match(/class="segbar[\s"]/g)||[]).lengt
   ck('★水平拖动 ew-resize', /cursor:ew-resize/.test(style));
   ck('触摸支持', /touchstart/.test(js) && /touch-action:none/.test(style));
   ck('★三段完全独立（各自 s/e）', /let tlSeg=\[\s*\{s:570/.test(js));
-    ck('★只拖右端（改 seg.e）', js.includes('seg.e=seg.s+dur;'));
+  ck('★拖动不再改 seg.e（只改 disp）', !/seg\.e=seg\.s\+dur;/.test(js) && js.includes('seg.disp=f*100'));
   ck('★最短 15 分钟', /TL_MIN=15/.test(js));
-  ck('★位置直接换算时长', js.includes('Math.min(TL_SPAN_MAX, Math.round(f*TL_SPAN_MAX))'));
-  ck('★tlPct 统一渲染', /function tlPct\(seg\)/.test(js));
-  ck('★手柄跟随 setPct（可停任意位置）', js.includes("knb'+'ABC'[i]).style.left=setPct"));
-  ck('★填充段 = 已过部分', js.includes("fil'+'ABC'[i]).style.width=timePct"));
+  ck('★位置直接映射为显示进度（0-100，不再受 TL_SPAN_MAX 限制）', js.includes('seg.manual=true;') && js.includes('seg.disp=f*100;') && !/TL_SPAN_MAX/.test(js));
+  ck('★统一渲染函数 calcLivePct', /function calcLivePct\(i, now, today\)/.test(js));
+  ck('★手柄跟随 displayProgress', js.includes("$('knb'+'ABC'[i]).style.left=p.toFixed(2)+'%'"));
+  ck('★填充 = displayProgress（同一数据源）', js.includes("$('fil'+'ABC'[i]).style.width=p.toFixed(2)+'%'"));
   ck('★无时间指针线', !/tlNow/.test(html));
   ck('★四个复位按钮', /btnResetUp/.test(html)&&/btnResetNoon/.test(html)&&/btnResetDown/.test(html)&&/btnTlReset/.test(html));
 }

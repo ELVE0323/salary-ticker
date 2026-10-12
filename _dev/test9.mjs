@@ -1,7 +1,7 @@
 // PWA 改造验证
 import fs from 'fs';
 
-const html = fs.readFileSync(new URL('./index.html', import.meta.url), 'utf8');
+const html = fs.readFileSync(new URL('../index.html', import.meta.url), 'utf8');
 const js   = html.split('<script>')[1].split('</script>')[0];
 
 let pass=0, fail=0;
@@ -10,14 +10,14 @@ const ck=(n,c,e='')=>{ c?(pass++,console.log(`  ✓ ${n}`)):(fail++,console.log(
 console.log('\n【1】PWA 必需文件');
 for(const f of ['manifest.json','sw.js','icon.svg','icon-maskable.svg']){
   let ok=false, size=0;
-  try{ size=fs.statSync(new URL('./'+f, import.meta.url)).size; ok=size>0; }catch(e){}
+  try{ size=fs.statSync(new URL('../'+f, import.meta.url)).size; ok=size>0; }catch(e){}
   ck(`${f} 存在`, ok, ok?`${size} 字节`:'缺失');
 }
 
 console.log('\n【2】manifest.json 合法性');
 {
   let m=null;
-  try{ m=JSON.parse(fs.readFileSync(new URL('./manifest.json', import.meta.url),'utf8')); ck('JSON 可解析', true); }
+  try{ m=JSON.parse(fs.readFileSync(new URL('../manifest.json', import.meta.url),'utf8')); ck('JSON 可解析', true); }
   catch(e){ ck('JSON 可解析', false, e.message); }
   if(m){
     ck('name 存在', !!m.name, m.name);
@@ -31,7 +31,7 @@ console.log('\n【2】manifest.json 合法性');
     ck('含 any 图标', (m.icons||[]).some(i=>i.purpose==='any'));
     ck('图标引用存在的文件', (m.icons||[]).every(i=>{
       const f=i.src.replace('./','');
-      try{ return fs.statSync(new URL('./'+f, import.meta.url)).size>0; }catch(e){ return false; }
+      try{ return fs.statSync(new URL('../'+f, import.meta.url)).size>0; }catch(e){ return false; }
     }));
     ck('start_url 与图标用相对路径（可任意路径部署）', !m.start_url.startsWith('http'));
   }
@@ -39,16 +39,16 @@ console.log('\n【2】manifest.json 合法性');
 
 console.log('\n【3】Service Worker');
 {
-  const sw=fs.readFileSync(new URL('./sw.js', import.meta.url),'utf8');
+  const sw=fs.readFileSync(new URL('../sw.js', import.meta.url),'utf8');
   ck('监听 install', /addEventListener\('install'/.test(sw));
   ck('监听 activate', /addEventListener\('activate'/.test(sw));
   ck('监听 fetch', /addEventListener\('fetch'/.test(sw));
   ck('缓存全部资源', /ASSETS\s*=\s*\[/.test(sw) && /index\.html/.test(sw) && /manifest\.json/.test(sw));
   ck('skipWaiting 立即接管', /skipWaiting/.test(sw));
   ck('清理旧版本缓存', /caches\.delete/.test(sw));
-  ck('网络失败回退缓存（离线可用）', sw.includes("caches.match(req).then(hit => hit || caches.match('./index.html'))"));
+  ck('网络失败回退缓存（离线可用）', sw.includes("caches.match(req).then(hit => hit || caches.match('./index.html')"));
   ck('只接管同源请求', /url\.origin !== location\.origin/.test(sw));
-  ck('版本号已更新到 v2（强制刷新旧缓存）', /const CACHE = 'salary-ticker-v2'/.test(sw));
+  ck('版本号已更新（强制刷新旧缓存）', /const CACHE = 'salary-ticker-v\d+'/.test(sw) && !/salary-ticker-v1'/.test(sw));
 // 策略判定：只看 e.respondWith 块内的真实代码（跳过注释）
 {
   const body = sw.slice(sw.indexOf("e.respondWith"));
